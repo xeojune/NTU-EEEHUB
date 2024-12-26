@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import styled from 'styled-components'
 
 export const SideBarContainer = styled.aside`
@@ -20,6 +21,7 @@ export const UserInfo = styled.div`
   align-items: center;
   gap: 10px;
   margin-bottom: 20px;
+  cursor: pointer;
 `
 
 export const ProfilePicture = styled.img`
@@ -49,6 +51,7 @@ export const SideBarItem = styled.div`
     color: red;
   }
 `
+
 
 export const MoreMenu = styled.div`
   position: absolute;

@@ -6,25 +6,29 @@ import {
   ProfilePicture, 
   UserName, 
   MoreMenu, 
-  DropdownItem 
+  DropdownItem, 
 } from '../../styles/SideBar/SideBarStyle'
 
 // Import icons
 import { AiFillHome, AiOutlineCompass, AiOutlineMessage, AiOutlineBell, AiOutlinePlusCircle, AiOutlineMore } from 'react-icons/ai'
+import User1Profile from '../../assets/userImg/User1.png'
+import { Link, useNavigate } from 'react-router'
 
 const SideBar: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false); // Toggle dropdown
+  const navigate = useNavigate();
+  const username = 'dex_xeb';
 
   return (
     <SideBarContainer>
       {/* User Information */}
-      <UserInfo>
-        <ProfilePicture src="https://via.placeholder.com/50" alt="User Profile" />
-        <UserName>John Doe</UserName>
+      <UserInfo onClick={() => navigate(`/${username}`)}>
+        <ProfilePicture src={User1Profile} alt="User Profile" />
+        <UserName>dex_xeb</UserName>
       </UserInfo>
 
       {/* Sidebar Items */}
-      <SideBarItem>
+      <SideBarItem onClick={() => navigate('/')}>
         <AiFillHome size={24} /> Home
       </SideBarItem>
       <SideBarItem>
