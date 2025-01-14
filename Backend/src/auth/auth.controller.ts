@@ -20,6 +20,8 @@ export class AuthController {
     return this.authService.login(credentials);
   }
   //TODO: POST Refresh Token
+  //Access token 만료 -> refresh token으로 새로운 access token 발급
+  //Refresh token 만료 -> 로그인 다시 해야함
   @Post('refresh')
   async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshTokens(refreshTokenDto.refreshToken);

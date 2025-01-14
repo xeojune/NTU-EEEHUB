@@ -77,6 +77,7 @@ const Register: React.FC = () => {
           <ContentWrap>
             <InputTitle>Name</InputTitle>
             <InputWrap>
+              {/* React Hook Form */}
               <LoginInput type='text' value={name} onChange={(e) => setName(e.target.value)} placeholder='Type your Name' />
             </InputWrap>
 
