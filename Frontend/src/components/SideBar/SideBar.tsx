@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { 
   SideBarContainer, 
   SideBarItem, 
@@ -13,16 +13,38 @@ import {
 import { AiFillHome, AiOutlineCompass, AiOutlineMessage, AiOutlineBell, AiOutlinePlusCircle, AiOutlineMore } from 'react-icons/ai'
 import User1Profile from '../../assets/userImg/User1.png'
 import { Link, useNavigate } from 'react-router'
+import { getUserById } from '../../apis/getUserApi'
 import NewPost from '../NewPost/NewPost'
 
 const SideBar: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false); // Toggle dropdown
   const [showCreate, setShowCreate] = useState<boolean>(false); // Toggle modal
   const navigate = useNavigate();
-  const username = 'dex_xeb';
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      try {
+        const userId = localStorage.getItem('userId'); // Retrieve user ID from localStorage
+        if (userId) {
+          const { name } = await getUserById(userId); // Fetch usernam
+          setUsername(name);
+        } else {
+          navigate('/login'); // Redirect to login if no user ID
+        }
+      } catch (error) {
+        console.error('Error fetching username:', error);
+        navigate('/login'); // Redirect to login on error
+      }
+    };
+
+    fetchUsername();
+  }, [navigate]);
+
 
   const openCreateModal = () => setShowCreate(true);
   const closeCreateModal = () => setShowCreate(false);
+
 
   return (
     <>
@@ -30,7 +52,7 @@ const SideBar: React.FC = () => {
         {/* User Information */}
         <UserInfo onClick={() => navigate(`/${username}`)}>
           <ProfilePicture src={User1Profile} alt="User Profile" />
-          <UserName>dex_xeb</UserName>
+          <UserName>{username}</UserName>
         </UserInfo>
 
         {/* Sidebar Items */}

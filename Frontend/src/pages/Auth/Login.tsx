@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react'
 import { ButtonWrap, ContentWrap, CreateAccountLink, CreateAccountWrap, ErrorMessageWrap, InputTitle, InputWrap, LoginContainer, LoginInput, LoginPage, LogoWrap, StyledLoginBox, SubLogoWrap, TitleWrap } from '../../styles/Auth/LoginStyle'
 import { Button } from '../../components/Buttons'
 import { useNavigate } from 'react-router'
+import { LoginData, loginUserApi } from '../../apis/loginApi'
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('');
-
   const [userValid, setUserValid] = useState(false);
   const [pwValid, setPwValid] = useState(false);
   const [notAllow, setNotAllow] = useState(true); 
-  
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,25 +35,31 @@ const Login: React.FC = () => {
     }
   }
 
-  const onClickConfirmButton = () => {
-    const testUsername = "testuser@gmail.com";
-    const testPassword = "Test@1234";
+  const onClickConfirmButton = async () => {
+    setErrorMessage(''); // Clear previous errors
   
-    // Validate the hardcoded credentials
-    if (username === testUsername && password === testPassword) {
-      const dummyToken = "dummy_access_token_123"; // Mock token
-      localStorage.setItem('accessToken', dummyToken);
+    const loginData: LoginData = {
+      email: username,
+      password: password,
+    };
   
-      console.log('Login successful!');
-      alert("Login Successful!");
-      navigate('/'); // Replace this with actual routing logic
-    } else {
-      console.error('Login error: Invalid credentials');
-      alert("Invalid username or password. Please try again.");
+    try {
+      const response = await loginUserApi(loginData);
+      console.log('Login successful:', response);
+  
+      // Save tokens and userId to localStorage
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('userId', response.userId); // Save userId
+  
+      alert('Login Successful!');
+      navigate('/'); // Navigate to the dashboard or desired route
+    } catch (error: any) {
+      console.error('Login error:', error.message);
+      setErrorMessage(error.message || 'An unexpected error occurred.');
     }
-  
-    console.log("Entered Credentials:", username, password);
   };
+  
 
   useEffect(() => {
     if(userValid && pwValid){
