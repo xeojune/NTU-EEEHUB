@@ -21,9 +21,11 @@ import {
   PointAllocationHeader,
 } from '../../styles/NewPost/NewPostStyle';
 import Cropper from 'react-easy-crop';
+import axios from 'axios';
 import { IoArrowBack } from 'react-icons/io5';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import User1Profile from '../../assets/userImg/User1.png';
+import { createPost, CreatePostResponse } from '../../apis/createPostApi';
 
 interface NewPostProps {
   onClose: () => void; // Function to close the modal
@@ -31,6 +33,7 @@ interface NewPostProps {
 
 const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1.5);
   const [isCaptionVisible, setIsCaptionVisible] = useState(false); // Controls the expanded section
@@ -42,7 +45,9 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
   const [points, setPoints] = useState(100);
   const MAX_POINTS = 9000; // User's maximum available points
   const [isPointMenuOpen, setIsPointMenuOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Handle Back Button 
   const handleBack = () => {
     if (isCaptionVisible) {
       setIsExiting(true);
@@ -59,6 +64,7 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
     }
   };
 
+  // Helper function to load and create an image
   const createImage = (url: string): Promise<HTMLImageElement> =>
     new Promise((resolve, reject) => {
       const image = new Image();
@@ -67,6 +73,7 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
       image.src = url;
     });
 
+  // Helper function to crop the image
   const getCroppedImg = async (
     imageSrc: string,
     pixelCrop: any,
@@ -100,9 +107,10 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
   // Handle file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setUploadedImage(URL.createObjectURL(file));
-      setZoom(1);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile); // Set the file state
+      setUploadedImage(URL.createObjectURL(selectedFile)); // Set the preview image
+      setZoom(1); // Reset zoom level
     }
   };
 
@@ -134,9 +142,37 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
     }
   };
 
+  // Handle Max Points
   const handleMaxPoints = () => {
     setPoints(MAX_POINTS);
   };
+
+  const handleSubmit = async (): Promise<void> => {
+    if (!file || !caption) {
+      alert("Please upload an image and add a caption.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const result: CreatePostResponse = await createPost(file, caption, points);
+      console.log("Post created successfully:", result);
+
+      setUploadedImage(null);
+      setFile(null);
+      setCaption('');
+      setPoints(100);
+      setIsCaptionVisible(false);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting post:", error);
+      alert("Failed to submit the post. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   return (
     <ModalCard width={isCaptionVisible ? '1000px' : '600px'}  radius="8px" onClose={onClose} background="black">
@@ -151,8 +187,13 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
           <NavigationButton onClick={handleNext} color='#4b8de0'>Next</NavigationButton>
         )}
         {isCaptionVisible && (
-          <NavigationButton onClick={() => console.log({ caption, uploadedImage })} color='#4b8de0'>
-            Share
+          <NavigationButton
+            onClick={handleSubmit}
+            disabled={!caption || isSubmitting}
+            style={{ marginLeft: 'auto' }}
+            color="#1a73e8"
+          >
+            {isSubmitting ? 'Posting...' : 'Share'}
           </NavigationButton>
         )}
       </NavigationHeader>

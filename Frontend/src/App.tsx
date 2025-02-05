@@ -5,6 +5,7 @@ import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import Profile from './pages/Profile/Profile'
 import ProtectedRoute from './components/ProtectedRoute'
+import Chat from './pages/Chat/Chat'
 
 function App() {
 
@@ -18,6 +19,7 @@ function App() {
         {/* Protected Routes */}
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/chat/:chatId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
       </Routes>
     </Router>
   )
