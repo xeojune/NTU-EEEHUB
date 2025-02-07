@@ -3,12 +3,17 @@ import Header from '../components/Header/Header';
 import SideBar from '../components/SideBar/SideBar';
 import { MainContent } from '../styles/Home/HomeStyle';
 
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface LayoutProps {
+  children: React.ReactNode;
+  refreshFeed?: () => void;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children, refreshFeed }) => {
   return (
     <div>
       <Header />
-      <SideBar />
-      <MainContent>{children}</MainContent>
+      <SideBar refreshFeed={refreshFeed} />
+      <MainContent style={{ padding: '0' }}>{children}</MainContent>
     </div>
   );
 };
