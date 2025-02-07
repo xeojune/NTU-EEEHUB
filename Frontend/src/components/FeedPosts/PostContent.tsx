@@ -1,16 +1,11 @@
 import React from 'react'
 import { PostContentContainer, PostContentText } from '../../styles/FeedPosts/PostContentStyle'
 
-interface PostContentProps {
-  caption: string;
-  points: number;
-}
-
-const PostContent: React.FC<PostContentProps> = ({ caption}) => {
+const PostContent: React.FC = () => {
   return (
     <PostContentContainer>
         <PostContentText>
-            {caption}
+            This is my new profile picture. What do you think?
         </PostContentText>
     </PostContentContainer>
   )
