@@ -44,7 +44,7 @@ export const SubTextBox = styled.div`
 `
 // Subtext (Light gray text)
 export const SubText = styled.span<{ color?: string }>`
-  color: ${(props) => props.color || 'white'};
+  color: ${(props) => props.color || 'gray'};
   font-size: 12px;
 `
 

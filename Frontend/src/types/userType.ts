@@ -1,7 +1,14 @@
 export interface FeedPostProps {
-    img: string;
-    username: string;
-    avatar?: string; // Optional avatar
-    centerX?: number;
-    centerY?: number;
-  }
+  _id: string;
+  imageUrls: string[];
+  caption: string;
+  username?: string;
+  avatar?: string;
+  centerX?: number;
+  centerY?: number;
+  points: number;
+  totalLikes: number;
+  totalComments: number;
+  createdAt: string;
+  onPostDeleted?: (id: string) => void;
+}

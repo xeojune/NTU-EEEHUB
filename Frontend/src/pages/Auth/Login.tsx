@@ -47,10 +47,11 @@ const Login: React.FC = () => {
       const response = await loginUserApi(loginData);
       console.log('Login successful:', response);
   
-      // Save tokens and userId to localStorage
+      // Save tokens, userId, and username to localStorage
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
-      localStorage.setItem('userId', response.userId); // Save userId
+      localStorage.setItem('userId', response.userId);
+      localStorage.setItem('username', response.username); // Store username
   
       alert('Login Successful!');
       navigate('/'); // Navigate to the dashboard or desired route

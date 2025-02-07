@@ -7,6 +7,7 @@ interface ModalCardProps {
   radius?: string;
   background?: string;
   color?: string;
+  top?: string;
   children?: React.ReactNode;
   onClose?: () => void;
 }
@@ -30,7 +31,7 @@ const ModalContainer = styled.div<ModalCardProps>`
   height: ${(props) => props.height || 'auto'};
   border-radius: ${(props) => props.radius || '8px'};
   color: ${(props) => props.color || '#fff'};
-  padding-top: 20px;
+  padding-top: ${(props) => props.top || '20px'};
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
@@ -44,6 +45,7 @@ const ModalCard: React.FC<ModalCardProps> = ({
   height,
   radius,
   background,
+  top,
   children,
   onClose,
 }) => {
@@ -54,6 +56,7 @@ const ModalCard: React.FC<ModalCardProps> = ({
         height={height}
         radius={radius}
         background={background}
+        top={top}
         onClick={(e) => {
           e.stopPropagation(); // Stops the click event from propagating to the overlay
         }}

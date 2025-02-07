@@ -16,7 +16,11 @@ import { Link, useNavigate } from 'react-router'
 import { getUserById } from '../../apis/getUserApi'
 import NewPost from '../NewPost/NewPost'
 
-const SideBar: React.FC = () => {
+interface SideBarProps {
+  refreshFeed?: () => void;
+}
+
+const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false); // Toggle dropdown
   const [showCreate, setShowCreate] = useState<boolean>(false); // Toggle modal
   const navigate = useNavigate();
@@ -87,7 +91,12 @@ const SideBar: React.FC = () => {
           )}
         </div>
       </SideBarContainer>
-      {showCreate && <NewPost onClose={closeCreateModal}/>}
+      {showCreate && (
+        <NewPost 
+          onClose={closeCreateModal}
+          onPostCreated={refreshFeed}
+        />
+      )}
     </>
   );
 };

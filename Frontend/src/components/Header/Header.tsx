@@ -61,8 +61,8 @@ const Header: React.FC = () => {
                 <WatchIcon color={activeLogo === 'watch' ? 'red' : 'white'} />
             </MiddleLogo>
             <MiddleLogo
-                to='/chat'
-                onClick={() => handleLogoClick('chat', '/chat')}
+                to='/chat/defaultChatId'
+                onClick={() => handleLogoClick('chat', '/chat/defaultChatId')}
                 isActive={activeLogo === 'chat'}
             >
                 <ChatIcon color={activeLogo === 'chat' ? 'red' : 'white'} />

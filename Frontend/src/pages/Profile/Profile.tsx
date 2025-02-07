@@ -16,18 +16,23 @@ import {
 import User1Image from "../../assets/userImg/User1.png";
 import User1BackgroundImage from "../../assets/userImg/User1post.png";
 
+
+import Like1 from "../../assets/interestImg/chess.png"
+import Like2 from "../../assets/interestImg/poker.png"
+import Like3 from "../../assets/interestImg/cycling.png"
+import Like4 from "../../assets/interestImg/photo.png"
+
 const Profile: React.FC = () => {
     // Mock data for interests and posts
     const interests = [
-        { id: 1, image: User1Image },
-        { id: 2, image: User1Image },
-        { id: 3, image: User1Image },
-        { id: 4, image: User1Image },
+        { id: 1, image: Like1 },
+        { id: 2, image: Like2 },
+        { id: 3, image: Like3 },
+        { id: 4, image: Like4 },
     ];
 
     const posts = [
-        { id: 1, image: User1BackgroundImage, text: "Things got easy when you are focused" },
-        { id: 2, image: User1BackgroundImage, text: "Love everyone" },
+        { id: 1, image: User1BackgroundImage, text: "This is my new profile picture. What do you think?" },
     ];
 
     return (
