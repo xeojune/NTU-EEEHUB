@@ -4,22 +4,16 @@ import Home from './pages/Home/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import Profile from './pages/Profile/Profile'
-import ProtectedRoute from './components/ProtectedRoute'
-import Chat from './pages/Chat/Chat'
 
 function App() {
 
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register/>} />
-
-        {/* Protected Routes */}
-        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-        <Route path="/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/chat/:chatId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+        <Route path="/:username" element={<Profile />} />
       </Routes>
     </Router>
   )

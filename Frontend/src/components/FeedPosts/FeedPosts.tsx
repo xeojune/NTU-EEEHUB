@@ -2,50 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { ContainerSm } from '../../styles/FeedPosts/FeedPostsStyle';
 import SkeletonUI from '../SkeletonUI';
 import FeedPost from './FeedPost';
-import { FeedPostProps } from '../../types/userType';
-import { getPosts } from '../../apis/getPostsApi';
-import User1Profile from '../../assets/userImg/User1.png';
+import User1Img from '../../assets/userImg/User1.png';
+import User1Post from '../../assets/userImg/User1post.png';
+import User2Img from '../../assets/userImg/User2.png';
+import User2Post from '../../assets/userImg/User2post.png';
+import User3Img from '../../assets/userImg/User3.png';
+import User3Post from '../../assets/userImg/User3post.png';
+import User4Img from '../../assets/userImg/User4.png';
+import User4Post from '../../assets/userImg/User4post.png';
 
 const FeedPosts: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [posts, setPosts] = useState<FeedPostProps[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const fetchedPosts = await getPosts();
-        // Add 2-second delay before showing posts
-        setTimeout(() => {
-          setPosts(fetchedPosts);
-          setIsLoading(false);
-        }, 2000);
-      } catch (err) {
-        console.error('Error fetching posts:', err);
-        setError('Failed to fetch posts');
-        setIsLoading(false);
-      }
-    };
-
-    fetchPosts();
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
   }, []);
-
-  const handlePostDeleted = () => {
-    // Refetch posts after deletion
-    setIsLoading(true);
-    const fetchPosts = async () => {
-      try {
-        const fetchedPosts = await getPosts();
-        setPosts(fetchedPosts);
-      } catch (err) {
-        console.error('Error fetching posts:', err);
-        setError('Failed to fetch posts');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPosts();
-  };
 
   return (
     <ContainerSm>
@@ -64,15 +37,10 @@ const FeedPosts: React.FC = () => {
       {/* Render FeedPosts when loading is complete */}
       {!isLoading && (
         <>
-          {posts.map((post) => (
-            <FeedPost
-              key={post._id}
-              {...post}
-              username={post.username || 'dex_xeb'}
-              avatar={post.avatar || User1Profile}
-              onPostDeleted={handlePostDeleted}
-            />
-          ))}
+          <FeedPost img={User1Post} username="dex_xeb" avatar={User1Img} />
+          <FeedPost img={User2Post} username="katarinabluu" avatar={User2Img} />
+          <FeedPost img={User3Post} username="eunwo.o_c" avatar={User3Img} />
+          <FeedPost img={User4Post} username="imwinter" avatar={User4Img} />
         </>
       )}
     </ContainerSm>
