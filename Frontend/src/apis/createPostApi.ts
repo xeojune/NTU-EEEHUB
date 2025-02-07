@@ -6,8 +6,9 @@ export interface CreatePostResponse {
   message: string;
   post: {
     id: string;
+    username: string;
     caption: string;
-    imageUrl: string;
+    imageUrls: string[];
     createdAt: string;
     updatedAt: string;
     points: number;
@@ -15,18 +16,26 @@ export interface CreatePostResponse {
 }
 
 // API function to handle form submission
-export const createPost = async (file: File, caption: string, points: number): Promise<CreatePostResponse> => {
+export const createPost = async (
+  files: File[], 
+  caption: string, 
+  points: number,
+  username: string
+): Promise<CreatePostResponse> => {
   try {
     const formData = new FormData();
-    formData.append('image', file);
+    files.forEach(file => {
+      formData.append('images', file);
+    });
     formData.append('caption', caption);
     formData.append('points', points.toString());
+    formData.append('username', username);
 
     const response = await postApiInstance.post<CreatePostResponse>('/api/posts', formData);
 
-    return response.data; // Return the response data
+    return response.data;
   } catch (error) {
     console.error('Error creating post:', error);
-    throw error; // Re-throw the error for further handling
+    throw error;
   }
 };

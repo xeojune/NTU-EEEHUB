@@ -1,6 +1,6 @@
 export interface FeedPostProps {
   _id: string;
-  imageUrl: string;
+  imageUrls: string[];
   caption: string;
   username?: string;
   avatar?: string;
@@ -10,5 +10,5 @@ export interface FeedPostProps {
   totalLikes: number;
   totalComments: number;
   createdAt: string;
-  onPostDeleted?: () => void;
+  onPostDeleted?: (id: string) => void;
 }

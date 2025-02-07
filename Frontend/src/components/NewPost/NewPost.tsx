@@ -21,31 +21,52 @@ import {
   PointAllocationHeader,
 } from '../../styles/NewPost/NewPostStyle';
 import Cropper from 'react-easy-crop';
-import axios from 'axios';
 import { IoArrowBack } from 'react-icons/io5';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import User1Profile from '../../assets/userImg/User1.png';
 import { createPost, CreatePostResponse } from '../../apis/createPostApi';
+import AddImageButton from './AddImageButton';
+import NextImageButton from './NextImageButton';
+import ImageDots from '../ImageDots'
 
 interface NewPostProps {
   onClose: () => void; // Function to close the modal
+  onPostCreated?: () => void;
 }
 
-const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1.5);
+const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [crops, setCrops] = useState<{ x: number, y: number }[]>([]);
+  const [zoom, setZoom] = useState(1);
   const [isCaptionVisible, setIsCaptionVisible] = useState(false); // Controls the expanded section
   const [caption, setCaption] = useState(''); // Stores the caption text
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any[]>([]);
   const [isCropping, setIsCropping] = useState(true);
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const [croppedImages, setCroppedImages] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
   const [points, setPoints] = useState(100);
   const MAX_POINTS = 9000; // User's maximum available points
   const [isPointMenuOpen, setIsPointMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<Array<{ width: number; height: number }>>([]);
+
+  const username = localStorage.getItem('username');
+
+  // Function to get image dimensions
+  const getImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({
+          width: img.width,
+          height: img.height
+        });
+      };
+      img.src = url;
+    });
+  };
 
   // Handle Back Button 
   const handleBack = () => {
@@ -57,10 +78,11 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
         setIsExiting(false);
       }, 300); // Match the animation duration
     } else {
-      setUploadedImage(null);
+      setUploadedImages([]);
+      setFiles([]);
       setZoom(1);
       setIsCropping(true);
-      setCroppedImage(null);
+      setCroppedImages([]);
     }
   };
 
@@ -105,28 +127,87 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
   };
 
   // Handle file upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      setFile(selectedFile); // Set the file state
-      setUploadedImage(URL.createObjectURL(selectedFile)); // Set the preview image
-      setZoom(1); // Reset zoom level
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      const newUrls = newFiles.map(file => URL.createObjectURL(file));
+      
+      // Get dimensions for all new images
+      const dimensions = await Promise.all(
+        newUrls.map(url => getImageDimensions(url))
+      );
+      
+      setImageDimensions(prev => [...prev, ...dimensions]);
+      setFiles(prev => [...prev, ...newFiles]);
+      setUploadedImages(prev => [...prev, ...newUrls]);
+      setCrops(prev => [...prev, ...newFiles.map(() => ({ x: 0, y: 0 }))]);
+      setCroppedAreaPixels(prev => [...prev, ...newFiles.map(() => null)]);
     }
+  };
+
+  // Handle additional image upload
+  const handleAdditionalImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFile = e.target.files[0];
+      const newUrl = URL.createObjectURL(newFile);
+      
+      // Get dimensions for the new image
+      const dimension = await getImageDimensions(newUrl);
+      
+      setImageDimensions(prev => [...prev, dimension]);
+      setFiles(prev => [...prev, newFile]);
+      setUploadedImages(prev => [...prev, newUrl]);
+      setCrops(prev => [...prev, { x: 0, y: 0 }]);
+      setCroppedAreaPixels(prev => [...prev, null]);
+    }
+  };
+
+  // Inside your NewPost component, add these functions:
+  const handlePreviousImage = () => {
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(prev => prev - 1);
+    }
+  };
+
+  const handleNextImage = () => {
+    if (currentImageIndex < uploadedImages.length - 1) {
+      setCurrentImageIndex(prev => prev + 1);
+    }
+  };
+
+  const handleDotClick = (index: number) => {
+    setCurrentImageIndex(index);
   };
 
   // Handle image crop
   const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+    setCroppedAreaPixels(prev => {
+      const newCroppedAreaPixels = [...prev];
+      newCroppedAreaPixels[currentImageIndex] = croppedAreaPixels;
+      return newCroppedAreaPixels;
+    });
   };
 
   // Handle next button
   const handleNext = async () => {
     try {
-      if (uploadedImage && croppedAreaPixels) {
-        const croppedImageUrl = await getCroppedImg(uploadedImage, croppedAreaPixels);
-        setCroppedImage(croppedImageUrl);
-        setIsCaptionVisible(true);
-        setIsCropping(false);
+      if (uploadedImages[currentImageIndex] && croppedAreaPixels[currentImageIndex]) {
+        const croppedImageUrl = await getCroppedImg(
+          uploadedImages[currentImageIndex],
+          croppedAreaPixels[currentImageIndex]
+        );
+        setCroppedImages(prev => {
+          const newCroppedImages = [...prev];
+          newCroppedImages[currentImageIndex] = croppedImageUrl;
+          return newCroppedImages;
+        });
+
+        if (currentImageIndex < uploadedImages.length - 1) {
+          setCurrentImageIndex(prev => prev + 1);
+        } else {
+          setIsCaptionVisible(true);
+          setIsCropping(false);
+        }
       }
     } catch (error) {
       console.error('Error cropping image:', error);
@@ -147,43 +228,70 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
     setPoints(MAX_POINTS);
   };
 
-  const handleSubmit = async (): Promise<void> => {
-    if (!file || !caption) {
-      alert("Please upload an image and add a caption.");
+  const handleSubmit = async () => {
+    if (!uploadedImages.length || !caption) {
       return;
     }
 
     try {
       setIsSubmitting(true);
+      // Create cropped files for all images
+      const croppedFiles = await Promise.all(
+        uploadedImages.map(async (image, index) => {
+          const croppedImage = await getCroppedImg(
+            image,
+            croppedAreaPixels[index]
+          );
+          if (!croppedImage) {
+            throw new Error('Failed to crop image');
+          }
+          // Convert base64 to file
+          const base64Response = await fetch(croppedImage);
+          const blob = await base64Response.blob();
+          return new File([blob], `image-${index}.jpg`, { type: 'image/jpeg' });
+        })
+      );
 
-      const result: CreatePostResponse = await createPost(file, caption, points);
-      console.log("Post created successfully:", result);
+      const username = localStorage.getItem('username');
+      if (!username) {
+        throw new Error('User not logged in');
+      }
 
-      setUploadedImage(null);
-      setFile(null);
+      const result = await createPost(croppedFiles, caption, points, username);
+      
+      // Reset all states
+      setUploadedImages([]);
+      setFiles([]);
       setCaption('');
       setPoints(100);
       setIsCaptionVisible(false);
+      setCurrentImageIndex(0);
+      setCroppedImages([]);
+
+      if (onPostCreated) {
+        onPostCreated();
+      }
+      
+      // Close the modal
       onClose();
     } catch (error) {
-      console.error("Error submitting post:", error);
-      alert("Failed to submit the post. Please try again.");
+      console.error('Error submitting post:', error);
+      alert('Failed to create post. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
   return (
-    <ModalCard width={isCaptionVisible ? '1000px' : '600px'}  radius="8px" onClose={onClose} background="black">
-      <NavigationHeader isImageSelected={!!uploadedImage}>
-        {uploadedImage && (
+    <ModalCard width={isCaptionVisible ? '1000px' : '600px'} radius="8px" onClose={onClose} background="black">
+      <NavigationHeader isImageSelected={!!uploadedImages.length}>
+        {uploadedImages.length > 0 && (
           <NavigationButton onClick={handleBack} color='white'>
             <IoArrowBack size={24} />
           </NavigationButton>
         )}
         <NewPostTitle>{isCaptionVisible ? 'Crop' : 'Create new post'}</NewPostTitle>
-        {uploadedImage && !isCaptionVisible && (
+        {uploadedImages.length > 0 && !isCaptionVisible && (
           <NavigationButton onClick={handleNext} color='#4b8de0'>Next</NavigationButton>
         )}
         {isCaptionVisible && (
@@ -202,30 +310,43 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
         {/* Main Modal Section */}
         <div style={{ flex: '1' }}>
           <NewPostContainer>
-            {uploadedImage ? (
+            {uploadedImages.length > 0 ? (
               <UploadContainer>
                 <ImageWrapper>
                   {isCropping ? (
-                    <Cropper
-                      image={uploadedImage}
-                      crop={crop}
-                      zoom={zoom}
-                      aspect={1 / 1}
-                      onCropChange={setCrop}
-                      onCropComplete={onCropComplete}
-                      onZoomChange={setZoom}
-                      objectFit="horizontal-cover"
-                      cropSize={{ width: 600, height: 600 }}
-                      style={{
-                        containerStyle: {
-                          width: '600px',
-                          height: '600px',
-                        },
-                      }}
-                    />
+                    <>
+                      <Cropper
+                        image={uploadedImages[currentImageIndex]}
+                        crop={crops[currentImageIndex]}
+                        zoom={zoom}
+                        aspect={1 / 1}
+                        onCropChange={(crop) => {
+                          const newCrops = [...crops];
+                          newCrops[currentImageIndex] = crop;
+                          setCrops(newCrops);
+                        }}
+                        onCropComplete={onCropComplete}
+                        onZoomChange={setZoom}
+                        /* If width < height, uses horizontal-cover, if height < width, uses vertical-cover */
+                        objectFit={imageDimensions[currentImageIndex]?.width < imageDimensions[currentImageIndex]?.height ? 'horizontal-cover' : 'vertical-cover'}
+                        cropSize={{ width: 600, height: 600 }}
+                      />
+                      <AddImageButton onImageSelect={handleAdditionalImage} />
+                      <NextImageButton
+                        onPrevious={handlePreviousImage}
+                        onNext={handleNextImage}
+                        showPrevious={currentImageIndex > 0}
+                        showNext={currentImageIndex < uploadedImages.length - 1}
+                      />
+                      <ImageDots
+                        totalImages={uploadedImages.length}
+                        currentIndex={currentImageIndex}
+                        onDotClick={handleDotClick}
+                      />
+                    </>
                   ) : (
                     <img 
-                      src={croppedImage || uploadedImage}
+                      src={croppedImages[currentImageIndex] || uploadedImages[currentImageIndex]}
                       alt="Cropped"
                       style={{
                         width: '600px',
@@ -242,7 +363,12 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
                 <p style={{ color: 'white', fontSize: '24px' }}>Drag photos and videos here.</p>
                 <StyledFileLabel>
                   Upload Image from your Device
-                  <StyledFileInput type="file" accept="image/*" onChange={handleFileUpload} />
+                  <StyledFileInput 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleFileUpload} 
+                    multiple
+                  />
                 </StyledFileLabel>
               </UploadContainer>
             )}
@@ -254,7 +380,7 @@ const NewPost: React.FC<NewPostProps> = ({ onClose }) => {
           <ExpandedSection isExiting={isExiting}>
             <CaptionHeader>
               <CaptionProfile src={User1Profile} />
-              <CaptionUsername>dex_xeb</CaptionUsername>
+              <CaptionUsername>{username}</CaptionUsername>
             </CaptionHeader>
             <CaptionInput
               placeholder="Write your caption here..."

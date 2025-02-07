@@ -4,6 +4,7 @@ import { FiMoreHorizontal } from 'react-icons/fi'
 import ModalCard from '../ModalCard'
 import styled from 'styled-components'
 
+//showActions added to check if the post belongs to current user logged in (prevent deleting other users' posts)
 interface PostHeaderProps {
   username?: string;
   avatar?: string;
@@ -11,6 +12,7 @@ interface PostHeaderProps {
   createdAt: string;
   onDelete?: () => void;
   onEdit?: () => void;
+  showActions?: boolean;
 }
 
 const OptionButton = styled.button`
@@ -29,13 +31,14 @@ const OptionButton = styled.button`
 
 const PostHeader: React.FC<PostHeaderProps> = ({ 
   username = 'User', 
-  avatar = '/default-avatar.png', 
-  points, 
+  avatar = '/default-avatar.png',
+  points,
   createdAt,
   onDelete,
-  onEdit
+  onEdit,
+  showActions = false
 }) => {
-  const [showOptions, setShowOptions] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   // Function to format the date
   const formatDate = (dateString: string) => {
@@ -58,50 +61,51 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   return (
     <PostHeaderContainer>
       <FlexContainer>
-        <AvatarImage src={avatar} alt="user profile pic" />
-        <PostInformation>
-          <TextBox>{username}</TextBox>
-          <SubTextBox>
-            <SubText>{formatDate(createdAt)} · </SubText>
-            <SubText color='red'>{points} points</SubText>
-          </SubTextBox>
-        </PostInformation>
+        <AvatarImage src={avatar} alt={username} />
+        <TextBox>
+          <PostInformation>
+            <TextBox>
+              {username}
+            </TextBox>
+            <SubTextBox>
+              <SubText>{formatDate(createdAt)}</SubText>
+              <SubText>·</SubText>
+              <SubText color='red'>{points} points</SubText>
+            </SubTextBox>
+          </PostInformation>
+        </TextBox>
       </FlexContainer>
-
-      <OptionsButton onClick={() => setShowOptions(true)}>
-        <FiMoreHorizontal size={24} />
-      </OptionsButton>
-
-      {showOptions && (
-        <ModalCard
-          width="300px"
-          height="auto"
-          onClose={() => setShowOptions(false)}
-        >
-          <div onClick={e => e.stopPropagation()}>
+      {showActions && (
+        <OptionsButton onClick={() => setShowModal(true)}>
+          <FiMoreHorizontal size={24} />
+        </OptionsButton>
+      )}
+      
+      {showModal && showActions && (
+        <ModalCard top="0" onClose={() => setShowModal(false)}>
+          {onEdit && (
             <OptionButton onClick={() => {
-              onEdit?.();
-              setShowOptions(false);
+              onEdit();
+              setShowModal(false);
             }}>
-              Edit
+              Edit Post
             </OptionButton>
+          )}
+          {onDelete && (
             <OptionButton 
-              color="#ff4d4d"
+              color="#FF453A"
               onClick={() => {
-                onDelete?.();
-                setShowOptions(false);
+                onDelete();
+                setShowModal(false);
               }}
             >
-              Delete
+              Delete Post
             </OptionButton>
-            <OptionButton onClick={() => setShowOptions(false)}>
-              Cancel
-            </OptionButton>
-          </div>
+          )}
         </ModalCard>
       )}
     </PostHeaderContainer>
-  )
-}
+  );
+};
 
-export default PostHeader
+export default PostHeader;

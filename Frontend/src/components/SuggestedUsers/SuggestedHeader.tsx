@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router'
 const SuggestedHeader: React.FC = () => {
   const navigate = useNavigate();
 
+  const username = localStorage.getItem('username');
+
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent the default link behavior
 
@@ -34,7 +36,7 @@ const SuggestedHeader: React.FC = () => {
         <SuggestedHeaderContainer>
             <AvatarImage src={avatar} alt="user profile pic" width='40px' height='40px'/>
             <UserProfileContainer>
-                dex_xeb
+                {username}
             </UserProfileContainer>
         </SuggestedHeaderContainer>
         <LogOutContainer to="/login" onClick={handleLogout}>
