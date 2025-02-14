@@ -12,6 +12,8 @@ export const BackgroundImageWrapper = styled.div`
     position: relative;
     width: 100%;
     height: 300px;
+    border-radius: 0 012px;
+    overflow: hidden;s
 `
 
 export const BackgroundImage = styled.img`
@@ -75,7 +77,7 @@ export const LikesInterestWrapper = styled.div`
     background: white;
     padding: 1.5rem;
     border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E3E3E3;
     margin-top: 11rem;
     margin-bottom: 2rem;
     h2 {
@@ -101,36 +103,77 @@ export const PostWrapper = styled.div`
     background: white;
     padding: 1.5rem;
     border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E3E3E3;
     margin-top: 11rem;
     margin-bottom: 2rem;
 
     h2 {
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
         font-size: 1.2rem;
+    }
+`
+export const PostOverlay = styled.div`
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.75rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    
+    .stats {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        color: white;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        
+        svg {
+            color: white;
+            font-size: 16px;
+        }
+        
+        span {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
     }
 `
 
 export const PostGrid = styled.div`
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
     
     .post {
-        background: #f8f8f8;
-        padding: 1rem;
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
         border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        
+        &:hover {
+            transform: scale(1.02);
+            
+            ${PostOverlay} {
+                opacity: 1;
+            }
+        }
         
         img {
             width: 100%;
-            height: 200px;
+            height: 100%;
             object-fit: cover;
             border-radius: 8px;
-            margin-bottom: 0.5rem;
-        }
-        
-        p {
-            color: #666;
         }
     }
 `

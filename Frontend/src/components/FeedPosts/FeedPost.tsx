@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FeedPostProps } from '../../types/userType';
+import { FeedPostProps } from '../../types/postType';
 import PostHeader from './PostHeader';
 import PostContent from './PostContent';
 import PostFooter from './PostFooter';

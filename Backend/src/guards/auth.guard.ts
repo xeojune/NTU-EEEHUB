@@ -32,5 +32,6 @@ export class AuthGuard implements CanActivate {
     private extractTokenFromHeader(request: Request): string | undefined {
         // Bearer fdlakjf;lajf;ljsafk -> split to get the token after the word "Bearer"
         return request.headers['authorization']?.split(' ')[1];
+        // 'Authorization'
     }
 }

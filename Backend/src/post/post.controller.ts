@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseInterceptors,
   UploadedFiles,
   NotFoundException,
@@ -44,6 +45,7 @@ export class PostController {
     @Body('caption') caption: string,
     @Body('points') points: string,
     @Body('username') username: string,
+    @Body('userId') userId: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     try {
@@ -53,7 +55,23 @@ export class PostController {
       if (!username) {
         throw new Error('Username is required');
       }
-      const result = await this.postService.createPost(caption, files, points, username);
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+
+      // Convert points to number
+      const pointsNumber = parseInt(points, 10);
+      if (isNaN(pointsNumber)) {
+        throw new Error('Points must be a valid number');
+      }
+
+      const result = await this.postService.createPost(
+        caption,
+        files,
+        pointsNumber,
+        userId,
+        username
+      );
       return result;
     } catch (error) {
       console.error('Error creating post:', error);
@@ -61,10 +79,15 @@ export class PostController {
     }
   }
 
+  // Query parameter enables fetching next set of posts from DB and S3
   @Get()
-  async getPosts(): Promise<PostResponse[]> {
+  async getPosts(
+    @Query('page') page: string = '1',
+    @Query('username') username?: string
+  ): Promise<PostResponse[]> {
     try {
-      return await this.postService.getPost();
+      const pageNumber = parseInt(page, 10);
+      return await this.postService.getPost(pageNumber, 50, username);
     } catch (error) {
       console.error('Error fetching posts:', error);
       throw error;
