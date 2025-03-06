@@ -23,8 +23,10 @@ import {
 import Cropper from 'react-easy-crop';
 import { IoArrowBack } from 'react-icons/io5';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
-import User1Profile from '../../assets/userImg/User1.png';
-import { createPost, CreatePostResponse } from '../../apis/createPostApi';
+import { useUser } from '../../context/UserContext';
+import { createPost, CreatePostResponse, useCreatePostMutation } from '../../apis/createPostApi';
+import { invalidatePostsCache } from '../../apis/getPostsApi';
+import { useQueryClient } from '@tanstack/react-query';
 import AddImageButton from './AddImageButton';
 import NextImageButton from './NextImageButton';
 import ImageDots from '../ImageDots'
@@ -35,6 +37,11 @@ interface NewPostProps {
 }
 
 const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
+  // const { user } = useUser();
+  const { profileImage } = useUser();
+  const currentUsername = localStorage.getItem('username');
+  const queryClient = useQueryClient();
+
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -52,7 +59,12 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageDimensions, setImageDimensions] = useState<Array<{ width: number; height: number }>>([]);
 
-  const username = localStorage.getItem('username');
+  const createPostMutation = useCreatePostMutation({
+    onSuccess: () => {
+      onClose();
+      onPostCreated?.();
+    }
+  });
 
   // Function to get image dimensions
   const getImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
@@ -191,6 +203,7 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
   // Handle next button
   const handleNext = async () => {
     try {
+      // Crop current image
       if (uploadedImages[currentImageIndex] && croppedAreaPixels[currentImageIndex]) {
         const croppedImageUrl = await getCroppedImg(
           uploadedImages[currentImageIndex],
@@ -202,15 +215,30 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
           return newCroppedImages;
         });
 
+        // If there are more images, go to next
         if (currentImageIndex < uploadedImages.length - 1) {
           setCurrentImageIndex(prev => prev + 1);
         } else {
+          // Check if all images have been cropped
+          const allImagesCropped = uploadedImages.every((_, index) => 
+            croppedAreaPixels[index] && croppedImages[index]
+          );
+
+          // if (!allImagesCropped) {
+          //   alert('Please crop all images before proceeding');
+          //   // Go back to the first uncropped image
+          //   const firstUncropped = croppedImages.findIndex(img => !img);
+          //   setCurrentImageIndex(firstUncropped >= 0 ? firstUncropped : 0);
+          //   return;
+          // }
+
           setIsCaptionVisible(true);
           setIsCropping(false);
         }
       }
     } catch (error) {
       console.error('Error cropping image:', error);
+      alert('Error cropping image. Please try again.');
     }
   };
 
@@ -229,56 +257,54 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
   };
 
   const handleSubmit = async () => {
-    if (!uploadedImages.length || !caption) {
+    if (!croppedImages.length) {
+      alert('Please select at least one image');
+      return;
+    }
+
+    if (!caption.trim()) {
+      alert('Please enter a caption');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      // Create cropped files for all images
-      const croppedFiles = await Promise.all(
-        uploadedImages.map(async (image, index) => {
-          const croppedImage = await getCroppedImg(
-            image,
-            croppedAreaPixels[index]
-          );
-          if (!croppedImage) {
-            throw new Error('Failed to crop image');
-          }
-          // Convert base64 to file
-          const base64Response = await fetch(croppedImage);
-          const blob = await base64Response.blob();
-          return new File([blob], `image-${index}.jpg`, { type: 'image/jpeg' });
+      const files = await Promise.all(
+        croppedImages.map(async (dataUrl, index) => {
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+          // Create unique filename for each image
+          const timestamp = Date.now();
+          return new File([blob], `image-${timestamp}-${index}.jpg`, { type: 'image/jpeg' });
         })
       );
 
-      const username = localStorage.getItem('username');
-      if (!username) {
-        throw new Error('User not logged in');
-      }
+      createPostMutation.mutate({
+        files,
+        caption,
+        points,
+        username: currentUsername || 'anonymous'
+      });
+    } catch (error) {
+      console.error('Error preparing images:', error);
+      alert('Error preparing images for upload');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      const result = await createPost(croppedFiles, caption, points, username);
-      
-      // Reset all states
-      setUploadedImages([]);
-      setFiles([]);
-      setCaption('');
-      setPoints(100);
-      setIsCaptionVisible(false);
-      setCurrentImageIndex(0);
-      setCroppedImages([]);
-
+  const handleShare = async () => {
+    try {
+      // Your existing share logic here
+      await handleSubmit();
+      // After successful post creation
+      await invalidatePostsCache(queryClient);
       if (onPostCreated) {
         onPostCreated();
       }
-      
-      // Close the modal
       onClose();
     } catch (error) {
-      console.error('Error submitting post:', error);
-      alert('Failed to create post. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error creating post:', error);
     }
   };
 
@@ -296,7 +322,7 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
         )}
         {isCaptionVisible && (
           <NavigationButton
-            onClick={handleSubmit}
+            onClick={handleShare}
             disabled={!caption || isSubmitting}
             style={{ marginLeft: 'auto' }}
             color="#1a73e8"
@@ -379,8 +405,8 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
         {isCaptionVisible && (
           <ExpandedSection isExiting={isExiting}>
             <CaptionHeader>
-              <CaptionProfile src={User1Profile} />
-              <CaptionUsername>{username}</CaptionUsername>
+              <CaptionProfile src={profileImage || '/default-avatar.png'} alt="Profile" />
+              <CaptionUsername>{currentUsername}</CaptionUsername>
             </CaptionHeader>
             <CaptionInput
               placeholder="Write your caption here..."

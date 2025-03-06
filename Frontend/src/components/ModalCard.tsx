@@ -1,5 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
+//이게 뭘까?
+import { createPortal } from 'react-dom';
 
 interface ModalCardProps {
   width?: string;
@@ -22,7 +24,7 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 99999;
 `;
 
 const ModalContainer = styled.div<ModalCardProps>`
@@ -38,7 +40,13 @@ const ModalContainer = styled.div<ModalCardProps>`
   justify-content: center;
   align-items: center;
   position: relative;
+  z-index: 100000;
 `;
+
+const Modal = {
+  Overlay: ModalOverlay,
+  Container: ModalContainer,
+}
 
 const ModalCard: React.FC<ModalCardProps> = ({
   width,
@@ -49,21 +57,20 @@ const ModalCard: React.FC<ModalCardProps> = ({
   children,
   onClose,
 }) => {
-  return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContainer
+  return createPortal(
+    <Modal.Overlay onClick={onClose}>
+      <Modal.Container
         width={width}
         height={height}
         radius={radius}
         background={background}
         top={top}
-        onClick={(e) => {
-          e.stopPropagation(); // Stops the click event from propagating to the overlay
-        }}
+        onClick={(e) => e.stopPropagation()}
       >
         {children}
-      </ModalContainer>
-    </ModalOverlay>
+      </Modal.Container>
+    </Modal.Overlay>,
+    document.body
   );
 };
 

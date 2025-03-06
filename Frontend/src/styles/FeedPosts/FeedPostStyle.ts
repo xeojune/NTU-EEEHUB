@@ -3,6 +3,7 @@ import styled from "styled-components";
 export const FeedPostContainer = styled.div`
     background: #1f1f27;
     border-radius: 8px;
+    position: relative;
 `;
 
 export const ImageContainer = styled.div`
@@ -26,6 +27,7 @@ export const PostImage = styled.img<{ centerX?: number; centerY?: number }>`
   display: block;
   max-width: 100%;
   object-fit: cover;
+  z-index: 1;
 
   ${({ centerX = 50, centerY = 0 }) => `
     top: ${centerY}%;

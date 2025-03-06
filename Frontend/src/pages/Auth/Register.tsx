@@ -1,139 +1,221 @@
-import React, { useEffect, useState } from 'react';
-import { ButtonWrap, ContentWrap, CreateAccountLink, CreateAccountWrap, ErrorMessageWrap, InputTitle, InputWrap, LoginContainer, LoginInput, LoginPage, LogoWrap, StyledLoginBox, SubLogoWrap, TitleWrap } from '../../styles/Auth/LoginStyle';
-import { Button } from '../../components/Buttons';
+import React, { useState, useEffect } from 'react';
+import {
+  ButtonWrap,
+  ContentWrap,
+  ErrorMessageWrap,
+  InputTitle,
+  InputWrap,
+  RegisterContainer,
+  RegisterInput,
+  RegisterPage,
+  SubLogoWrap,
+  TitleWrap,
+  IllustrationContainer,
+  RegisterButton,
+  RegisterImage,
+  BackgroundContainer,
+  StyledRegisterBox
+} from '../../styles/Auth/RegisterStyle';
 import { useNavigate } from 'react-router';
 import { registerUserApi } from '../../apis/registerApi';
+import RegisterIllustration from '../../assets/loginImg/RegisterLogo.png';
+import { ForgotPasswordLink } from '../../styles/Auth/LoginStyle';
+
+interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+}
 
 const Register: React.FC = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
+  const [name, setName] = useState('');
   const [emailValid, setEmailValid] = useState(false);
   const [pwValid, setPwValid] = useState(false);
-  const [pwMatch, setPwMatch] = useState(false);
+  const [pwConfirmValid, setPwConfirmValid] = useState(false);
+  const [nameValid, setNameValid] = useState(false);
+  const [pwErrors, setPwErrors] = useState({
+    length: false,
+    number: false,
+    special: false
+  });
   const [notAllow, setNotAllow] = useState(true);
-
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const handleEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
+    const newEmail = e.target.value;
+    setEmail(newEmail);
     const regex =
       /^(([^<>()\[\].,;:\s@"]+(\.[^<>()\[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i;
-    if (regex.test(email)) {
+    if (regex.test(newEmail)) {
       setEmailValid(true);
+      setErrorMessage('');
     } else {
       setEmailValid(false);
+      setErrorMessage('Please enter a valid email address');
     }
   };
 
   const handlePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    const regex =
-      /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+])(?!.*[^a-zA-Z0-9$`~!@$!%*#^?&\\(\\)\-_=+]).{8,20}$/;
-    if (regex.test(password)) {
-      setPwValid(true);
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    
+    // Check each requirement separately
+    const hasMinLength = newPassword.length >= 8;
+    const hasNumber = /[0-9]/.test(newPassword);
+    const hasSpecial = /[$`~!@$!%*#^?&\\(\\)\-_=+]/.test(newPassword);
+    
+    setPwErrors({
+      length: !hasMinLength,
+      number: !hasNumber,
+      special: !hasSpecial
+    });
+    
+    // Password is valid only if all requirements are met
+    const isValid = hasMinLength && hasNumber && hasSpecial;
+    setPwValid(isValid);
+    
+    if (!isValid) {
+      let errors = [];
+      if (!hasMinLength) errors.push('Password must be at least 8 characters');
+      if (!hasNumber) errors.push('Password must contain at least one number');
+      if (!hasSpecial) errors.push('Password must contain at least one special character');
+      setErrorMessage(errors.join('\n'));
     } else {
-      setPwValid(false);
+      setErrorMessage('');
     }
   };
 
   const handleConfirmPassword = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmPassword(e.target.value);
-    setPwMatch(e.target.value === password);
+    const confirmPw = e.target.value;
+    setConfirmPassword(confirmPw);
+    const isValid = confirmPw === password;
+    setPwConfirmValid(isValid);
+    if (!isValid) {
+      setErrorMessage('Passwords do not match');
+    } else {
+      setErrorMessage('');
+    }
   };
 
-  const onClickRegisterButton = async () => {
-    if (emailValid && pwValid && pwMatch && name) {
-      try {
-        const response = await registerUserApi({ name, email, password }); // Call the API service
-        console.log('Registration successful:', response);
-        alert('Registration Successful!');
-        navigate('/login'); // Redirect to the login page
-      } catch (error) {
-        console.error('Registration failed:', error);
-        alert('Registration failed. Please try again.');
-      }
+  const handleName = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setName(newName);
+    const isValid = newName.length >= 2;
+    setNameValid(isValid);
+    if (!isValid) {
+      setErrorMessage('Name must be at least 2 characters long');
+    } else {
+      setErrorMessage('');
     }
   };
 
   useEffect(() => {
-    if (emailValid && pwValid && pwMatch && name.length > 0) {
-      setNotAllow(false);
+    setNotAllow(!(emailValid && pwValid && pwConfirmValid && nameValid));
+  }, [emailValid, pwValid, pwConfirmValid, nameValid]);
+
+  const onClickRegister = async () => {
+    if (!emailValid || !pwValid || !pwConfirmValid || !nameValid) {
+      setErrorMessage('Please check all fields are valid');
       return;
     }
-    setNotAllow(true);
-  }, [emailValid, pwValid, pwMatch, name]);
+
+    try {
+      const registerData: RegisterData = {
+        email,
+        password,
+        name,
+      };
+      
+      await registerUserApi(registerData);
+      alert('Registration Successful');
+      navigate('/login');
+    } catch (error) {
+      setErrorMessage('Registration failed. Please try again.');
+    }
+  };
 
   return (
-    <LoginPage>
-      <LoginContainer>
-        <StyledLoginBox>
+    <RegisterPage>
+      <RegisterContainer>
+        <StyledRegisterBox>
           <TitleWrap>
-            <LogoWrap>EEEHub</LogoWrap>
-            <SubLogoWrap>REGISTER</SubLogoWrap>
+            EEEHUB
           </TitleWrap>
+          <SubLogoWrap>
+            Sign Up
+          </SubLogoWrap>
           <ContentWrap>
-            <InputTitle>Name</InputTitle>
             <InputWrap>
-              {/* React Hook Form */}
-              <LoginInput type='text' value={name} onChange={(e) => setName(e.target.value)} placeholder='Type your Name' />
+              <InputTitle>Email</InputTitle>
+              <RegisterInput
+                type='text'
+                value={email}
+                onChange={handleEmail}
+                placeholder="login@gmail.com"
+              />
+              {!emailValid && email.length > 0 && (
+                <ErrorMessageWrap>Please enter a valid email address</ErrorMessageWrap>
+              )}
             </InputWrap>
-
-            <InputTitle>Email</InputTitle>
             <InputWrap>
-              <LoginInput type='text' value={email} onChange={handleEmail} placeholder='Type your Email' />
+              <InputTitle>Password</InputTitle>
+              <RegisterInput
+                type='password'
+                value={password}
+                onChange={handlePassword}
+                placeholder="••••••••••••"
+              />
+              {password.length > 0 && (
+                <ErrorMessageWrap>
+                  {pwErrors.length && <div>• Password must be at least 8 characters</div>}
+                  {pwErrors.number && <div>• Password must contain at least one number</div>}
+                  {pwErrors.special && <div>• Password must contain at least one special character</div>}
+                </ErrorMessageWrap>
+              )}
             </InputWrap>
-            <ErrorMessageWrap>
-              {
-                !emailValid && email.length > 0 && (
-                  <div>Incorrect Email. Please Input Correct Email.</div>
-                )
-              }
-            </ErrorMessageWrap>
-
-            <InputTitle>Password</InputTitle>
             <InputWrap>
-              <LoginInput type='password' value={password} onChange={handlePassword} placeholder='Type your Password' />
+              <InputTitle>Confirm Password</InputTitle>
+              <RegisterInput
+                type='password'
+                value={confirmPassword}
+                onChange={handleConfirmPassword}
+                placeholder="••••••••••••"
+              />
+              {!pwConfirmValid && confirmPassword.length > 0 && (
+                <ErrorMessageWrap>Passwords do not match</ErrorMessageWrap>
+              )}
             </InputWrap>
-            <ErrorMessageWrap>
-              {
-                !pwValid && password.length > 0 && (
-                  <>
-                    <div>*Password must be more than 8 characters.</div>
-                    <div>*Password must contain at least one numerical character.</div>
-                    <div>*Password must contain at least one special character.</div>
-                  </>
-                )
-              }
-            </ErrorMessageWrap>
-
-            <InputTitle>Confirm Password</InputTitle>
             <InputWrap>
-              <LoginInput type='password' value={confirmPassword} onChange={handleConfirmPassword} placeholder='Confirm your Password' />
+              <InputTitle>Name</InputTitle>
+              <RegisterInput
+                type='text'
+                value={name}
+                onChange={handleName}
+                placeholder="Personal Name"
+              />
+              {!nameValid && name.length > 0 && (
+                <ErrorMessageWrap>Name must be at least 2 characters long</ErrorMessageWrap>
+              )}
             </InputWrap>
-            <ErrorMessageWrap>
-              {
-                !pwMatch && confirmPassword.length > 0 && (
-                  <div>*Passwords do not match.</div>
-                )
-              }
-            </ErrorMessageWrap>
+            <ForgotPasswordLink href="/login">Already have an account?</ForgotPasswordLink>
           </ContentWrap>
-
           <ButtonWrap>
-            <Button onClick={onClickRegisterButton} disabled={notAllow} width='120px' height='35px' radius='2rem' background='#D71541'>REGISTER</Button>
+            <RegisterButton onClick={onClickRegister} disabled={notAllow}>
+              REGISTER
+            </RegisterButton>
           </ButtonWrap>
+        </StyledRegisterBox>
+      </RegisterContainer>
 
-          <CreateAccountWrap>
-            <span>Already have an Account?</span>
-            <CreateAccountLink to="/login"> Login</CreateAccountLink>
-          </CreateAccountWrap>
-
-        </StyledLoginBox>
-      </LoginContainer>
-    </LoginPage>
+      <IllustrationContainer>
+        <RegisterImage src={RegisterIllustration} alt="Register Illustration" />
+      </IllustrationContainer>
+      <BackgroundContainer />
+    </RegisterPage>
   );
 };
 

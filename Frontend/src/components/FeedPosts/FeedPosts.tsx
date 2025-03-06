@@ -1,22 +1,24 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { ContainerSm } from '../../styles/FeedPosts/FeedPostsStyle';
 import SkeletonUI from '../SkeletonUI';
 import FeedPost from './FeedPost';
 import { FeedPostProps } from '../../types/postType';
-import { getPosts } from '../../apis/getPostsApi';
+import { usePosts, invalidatePostsCache } from '../../apis/getPostsApi';
 import { LoadingSpinner } from '../LoadingSpinner';
 import User1Profile from '../../assets/userImg/User1.png';
+import { useQueryClient } from '@tanstack/react-query';
 
 const FeedPosts: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [posts, setPosts] = useState<FeedPostProps[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [allPosts, setAllPosts] = useState<FeedPostProps[]>([]);
   const observer = useRef<IntersectionObserver>();
+  const queryClient = useQueryClient();
+
+  const { data: posts, error, isLoading } = usePosts({ page, username: '' });
+
   const lastPostElementRef = useCallback((node: HTMLDivElement) => {
-    if (isLoadingMore) return;
+    if (isLoading) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
@@ -24,59 +26,35 @@ const FeedPosts: React.FC = () => {
       }
     });
     if (node) observer.current.observe(node);
-  }, [isLoadingMore, hasMore]);
+  }, [isLoading, hasMore]);
 
-  const fetchPosts = async (pageNum: number, isInitial: boolean = false) => {
-    try {
-      if (isInitial) setIsLoading(true);
-      else setIsLoadingMore(true);
-
-      const fetchedPosts = await getPosts({ page: pageNum });
-      
-      //to simulate the delay for fetching post (loading spinner)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      if (fetchedPosts.length === 0) {
+  useEffect(() => {
+    if (posts) {
+      if (posts.length === 0) {
         setHasMore(false);
       } else {
-        setPosts(prev => {
-          if (isInitial) return fetchedPosts;
+        setAllPosts(prev => {
+          if (page === 1) return posts;
           
-          // Create a Set of existing post IDs for O(1) lookup
           const existingIds = new Set(prev.map(post => post._id));
-          
-          // Filter out any duplicates from the new posts
-          const uniqueNewPosts = fetchedPosts.filter(post => !existingIds.has(post._id));
+          const uniqueNewPosts = posts.filter(post => !existingIds.has(post._id));
           
           return [...prev, ...uniqueNewPosts];
         });
       }
-    } catch (err) {
-      console.error('Error fetching posts:', err);
-      setError('Failed to fetch posts');
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
     }
-  };
+  }, [posts, page]);
 
-  useEffect(() => {
-    fetchPosts(1, true);
-  }, []);
-
-  useEffect(() => {
-    if (page > 1) {
-      fetchPosts(page);
-    }
-  }, [page]);
-
-  const handlePostDeleted = () => {
+  const handlePostDeleted = async () => {
     setPage(1);
-    fetchPosts(1, true);
+    setAllPosts([]);
+    setHasMore(true);
+    // Invalidate and refetch posts
+    await invalidatePostsCache(queryClient);
   };
 
-  if (error) return <div>{error}</div>;
-  if (isLoading) return (
+  if (error) return <div>Error loading posts</div>;
+  if (isLoading && page === 1) return (
     <ContainerSm>
       {[0, 1, 2, 3].map((_, idx) => (
         <div key={idx} style={{ marginBottom: '20px' }}>
@@ -92,8 +70,8 @@ const FeedPosts: React.FC = () => {
 
   return (
     <ContainerSm>
-      {posts.map((post, index) => {
-        if (posts.length === index + 1) {
+      {allPosts.map((post, index) => {
+        if (allPosts.length === index + 1) {
           return (
             <div ref={lastPostElementRef} key={post._id}>
               <FeedPost
@@ -115,7 +93,7 @@ const FeedPosts: React.FC = () => {
           />
         );
       })}
-      {isLoadingMore && <LoadingSpinner />}
+      {isLoading && page > 1 && <LoadingSpinner />}
     </ContainerSm>
   );
 };

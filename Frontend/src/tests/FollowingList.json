@@ -1,0 +1,36 @@
+{
+  "followings": [
+    {
+      "id": "4",
+      "imageUrl": "/src/assets/userImg/User4.png",
+      "name": "@iam_winter",
+      "description": "Year 3 EEE student specializing in microelectronics. Looking for study group members!",
+      "year": 3,
+      "interests": ["Microelectronics", "VLSI Design", "Semiconductor Physics"]
+    },
+    {
+      "id": "5",
+      "imageUrl": "/src/assets/userImg/User1.png",
+      "name": "@dex_xeb",
+      "description": "Year 2 EEE. Passionate about IoT and embedded systems. Always up for hackathons!",
+      "year": 2,
+      "interests": ["IoT", "Embedded Systems", "Arduino"]
+    },
+    {
+      "id": "6",
+      "imageUrl": "/src/assets/userImg/User6.png",
+      "name": "@goyounjung",
+      "description": "Final year EEE focusing on telecommunications. Looking for project teammates!",
+      "year": 4,
+      "interests": ["Telecommunications", "5G", "Network Security"]
+    },
+    {
+      "id": "7",
+      "imageUrl": "/src/assets/userImg/User9.png",
+      "name": "@nozeworld",
+      "description": "Final year EEE focusing on telecommunications. Looking for project teammates!",
+      "year": 4,
+      "interests": ["Telecommunications", "5G", "Network Security"]
+    }
+  ]
+}

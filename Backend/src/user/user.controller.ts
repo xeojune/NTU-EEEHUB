@@ -18,6 +18,11 @@ export class UserController {
     return this.userService.getUserProfile(id);
   }
 
+  @Get('name/:username/profile')
+  async getUserProfileByUsername(@Param('username') username: string) {
+    return this.userService.getUserProfileByUsername(username);
+  }
+
   //upload profile image
   @Post(':id/profile-image')
   @UseInterceptors(FileInterceptor('image'))

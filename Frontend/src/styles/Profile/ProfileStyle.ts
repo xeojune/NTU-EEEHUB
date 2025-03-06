@@ -4,7 +4,7 @@ export const ProfileContainer = styled.div`
     display: flex;
     flex-direction: column;
     width: 100%;
-    min-height: 100vh;
+    height: calc(100vh - 60px);
     background-color: white;
 `
 
@@ -12,8 +12,8 @@ export const BackgroundImageWrapper = styled.div`
     position: relative;
     width: 100%;
     height: 300px;
-    border-radius: 0 012px;
-    overflow: hidden;s
+    border-radius: 0 12px;
+    overflow: hidden;
 `
 
 export const BackgroundImage = styled.img`
@@ -52,10 +52,53 @@ export const ProfileImage = styled.img`
     object-fit: cover;
     border: 4px solid transparent;
     position: absolute;
-    top: -100px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
+    transition: filter 0.3s;
+`
+
+export const ProfileImageContainer = styled.div`
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    cursor: pointer;
+    border-radius: 50%;
+
+    .camera-icon {
+        display: none;
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        background-color: rgba(255, 255, 255, 0);
+        padding: 8px;
+        border-radius: 50%;
+        z-index: 3;
+        color: white;
+    }
+
+    &:hover {
+        .camera-icon {
+            display: block;
+        }
+
+        ${ProfileImage} {
+            filter: brightness(0.5);
+        }
+    }
+`
+
+
+
+export const HiddenFileInput = styled.input`
+    display: none;
 `
 
 export const ProfileInfo = styled.div`

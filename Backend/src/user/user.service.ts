@@ -2,7 +2,8 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
 import { User } from '../auth/schemas/user.schema';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { uuidv7 } from 'uuidv7';
 
 @Injectable()
@@ -62,14 +63,21 @@ export class UserService {
     };
 
     try {
+      // Upload the file to S3
       await this.s3Client.send(new PutObjectCommand(uploadParams));
-      const imageUrl = `https://${this.bucketName}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${key}`;
 
-      //update user document with new image URL
-      const updateField = type === 'profile' ? 'profileImage' : 'backgroundImage';
-      await this.userModel.findByIdAndUpdate(userId, { [updateField]: imageUrl });
+      // Generate a signed URL for the uploaded file
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key
+      });
+      const signedUrl = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
+
+      // Update user document with the S3 key (not the signed URL)
+      const updateField = type === 'profile' ? 'profileImg' : 'backgroundImg';
+      await this.userModel.findByIdAndUpdate(userId, { [updateField]: key });
       
-      return imageUrl;
+      return signedUrl;
     } catch (error) {
       throw new Error(`Error uploading image: ${error.message}`);
     }
@@ -104,8 +112,64 @@ export class UserService {
     if (!user) {
       throw new Error('User not found');
     }
+
+    // Generate signed URLs for profile and background images if they exist
+    const profile = user.toObject();
     
-    return user;
+    if (profile.profileImg) {
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: profile.profileImg
+      });
+      profile.profileImg = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
+    }
+    
+    if (profile.backgroundImg) {
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: profile.backgroundImg
+      });
+      profile.backgroundImg = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
+    }
+    
+    return profile;
   }
-  
+
+  async getUserProfileByUsername(username: string) {
+    const user = await this.userModel.findOne({ name: username })
+      .select('name email profileImg backgroundImg totalPoints')
+      .exec();
+    
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const profile = user.toObject();
+
+    // Generate signed URLs for profile and background images if they exist (in order to access other peoples' profile image in S3)
+    // Before we didn't have a signed URL, we directly accessed the profile image in S3
+    if (profile.profileImg) {
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: profile.profileImg
+      });
+      profile.profileImg = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
+    }
+    
+    if (profile.backgroundImg) {
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: profile.backgroundImg
+      });
+      profile.backgroundImg = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
+    }
+
+    return {
+      id: user._id,
+      name: user.name,
+      profileImg: profile.profileImg,
+      backgroundImg: profile.backgroundImg,
+      totalPoints: user.totalPoints
+    };
+  }
 }

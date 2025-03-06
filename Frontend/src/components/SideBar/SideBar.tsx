@@ -6,15 +6,16 @@ import {
   ProfilePicture, 
   UserName, 
   MoreMenu, 
-  DropdownItem, 
+  DropdownItem,
+  SideBarLink, 
 } from '../../styles/SideBar/SideBarStyle'
 
 // Import icons
 import { AiFillHome, AiOutlineCompass, AiOutlineMessage, AiOutlineBell, AiOutlinePlusCircle, AiOutlineMore } from 'react-icons/ai'
-import User1Profile from '../../assets/userImg/User1.png'
 import { Link, useNavigate } from 'react-router'
 import { getUserById } from '../../apis/getUserApi'
 import NewPost from '../NewPost/NewPost'
+import { useUser } from '../../context/UserContext'
 
 interface SideBarProps {
   refreshFeed?: () => void;
@@ -25,6 +26,7 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
   const [showCreate, setShowCreate] = useState<boolean>(false); // Toggle modal
   const navigate = useNavigate();
   const [username, setUsername] = useState<string | null>(null);
+  const { profileImage } = useUser();
 
   useEffect(() => {
     const fetchUsername = async () => {
@@ -51,53 +53,58 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
 
 
   return (
-    <>
-      <SideBarContainer>
-        {/* User Information */}
-        <UserInfo onClick={() => navigate(`/${username}`)}>
-          <ProfilePicture src={User1Profile} alt="User Profile" />
-          <UserName>{username}</UserName>
-        </UserInfo>
+    <SideBarContainer>
+      {/* User Information */}
+      <SideBarLink to={`/${username}`}>
+        <SideBarItem>
+          <UserInfo>
+            <ProfilePicture src={profileImage || '/default-avatar.png'} alt="Profile" />
+            <UserName>{username}</UserName>
+          </UserInfo>
+        </SideBarItem>
+      </SideBarLink>
 
-        {/* Sidebar Items */}
-        <SideBarItem onClick={() => navigate('/')}>
+      {/* Sidebar Items */}
+      <SideBarLink to="/">
+        <SideBarItem>
           <AiFillHome size={24} /> Home
         </SideBarItem>
-        <SideBarItem>
-          <AiOutlineCompass size={24} /> Explore
-        </SideBarItem>
-        <SideBarItem>
-          <AiOutlineMessage size={24} /> Messages
-        </SideBarItem>
-        <SideBarItem>
-          <AiOutlineBell size={24} /> Notifications
-        </SideBarItem>
-        <SideBarItem onClick={openCreateModal}>
-          <AiOutlinePlusCircle size={24} /> Create
+      </SideBarLink>
+      <SideBarItem>
+        <AiOutlineCompass size={24} /> Explore
+      </SideBarItem>
+      <SideBarItem>
+        <AiOutlineMessage size={24} /> Messages
+      </SideBarItem>
+      <SideBarItem>
+        <AiOutlineBell size={24} /> Notifications
+      </SideBarItem>
+      <SideBarItem onClick={openCreateModal}>
+        <AiOutlinePlusCircle size={24} /> Create
+      </SideBarItem>
+
+      {/* More Item */}
+      <div style={{ marginTop: 'auto', position: 'relative' }}>
+        <SideBarItem onClick={() => setShowDropdown(!showDropdown)}>
+          <AiOutlineMore size={24} /> More
         </SideBarItem>
 
-        {/* More Item */}
-        <div style={{ marginTop: 'auto', position: 'relative' }}>
-          <SideBarItem onClick={() => setShowDropdown(!showDropdown)}>
-            <AiOutlineMore size={24} /> More
-          </SideBarItem>
-
-          {/* Dropdown Menu */}
-          {showDropdown && (
-            <MoreMenu>
-              <DropdownItem>Settings</DropdownItem>
-              <DropdownItem>Logout</DropdownItem>
-            </MoreMenu>
-          )}
-        </div>
-      </SideBarContainer>
+        {/* Dropdown Menu */}
+        {showDropdown && (
+          <MoreMenu>
+            <DropdownItem>Settings</DropdownItem>
+            <DropdownItem>Logout</DropdownItem>
+          </MoreMenu>
+        )}
+      </div>
       {showCreate && (
         <NewPost 
           onClose={closeCreateModal}
           onPostCreated={refreshFeed}
         />
       )}
-    </>
+    </SideBarContainer>
+    
   );
 };
 

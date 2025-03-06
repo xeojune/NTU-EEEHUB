@@ -1,0 +1,36 @@
+{
+    "followers": [
+      {
+        "id": "1",
+        "imageUrl": "/src/assets/userImg/User7.png",
+        "name": "@39.cho",
+        "description": "Hello! I'm EEE Year 1 Student wishing to connect with people around the campus. Feel free to contact me.",
+        "year": 1,
+        "interests": ["Robotics", "AI", "Circuit Design"]
+      },
+      {
+        "id": "2",
+        "imageUrl": "/src/assets/userImg/User5.png",
+        "name": "@jxxvvxxk",
+        "description": "Year 2 EEE student passionate about renewable energy. Looking to collaborate on green tech projects!",
+        "year": 2,
+        "interests": ["Renewable Energy", "Power Systems", "Sustainability"]
+      },
+      {
+        "id": "3",
+        "imageUrl": "/src/assets/userImg/User3.png",
+        "name": "@eunwo.o_c",
+        "description": "Final year EEE. Currently working on ML projects and signal processing. Open to research discussions!",
+        "year": 4,
+        "interests": ["Machine Learning", "Signal Processing", "Computer Vision"]
+      },
+      {
+        "id": "4",
+        "imageUrl": "/src/assets/userImg/User8.png",
+        "name": "@ash.island",
+        "description": "Final year EEE. Currently working on ML projects and signal processing. Open to research discussions!",
+        "year": 4,
+        "interests": ["Machine Learning", "Signal Processing", "Computer Vision"]
+      }
+    ]
+  }

@@ -15,12 +15,14 @@ export const SideBarContainer = styled.aside`
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
   gap: 10px;
 `
-
+export const SideBarLink = styled(Link)`
+  text-decoration: none;
+  color: white;
+`
 export const UserInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 20px;
   cursor: pointer;
 `
 
@@ -33,7 +35,7 @@ export const ProfilePicture = styled.img`
 
 export const UserName = styled.div`
   font-size: 18px;
-  font-weight: 500;
+  font-weight: bold;
 `
 
 export const SideBarItem = styled.div`

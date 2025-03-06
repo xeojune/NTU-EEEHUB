@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './config/config';
 import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { PostModule } from './post/post.module';
     AuthModule,
     UserModule,
     PostModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

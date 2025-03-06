@@ -22,6 +22,7 @@ export const IconGroup = styled.div`
 // Individual icons styled as buttons
 export const IconButton = styled.button`
   background: transparent;
+  color: white;
   border: none;
   cursor: pointer;
   margin-right: 8px;

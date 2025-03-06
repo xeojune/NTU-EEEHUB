@@ -70,41 +70,42 @@ export class PostService {
 
   async createPost(caption: string, files: Express.Multer.File[], points: number, userId: string, username: string): Promise<Post> {
     try {
-      const session = await this.postModel.startSession();
-      session.startTransaction();
+      // Validate minimum points requirement
+      if (points < 100) {
+        throw new BadRequestException('Need at least 100 points for post creation');
+      }
 
       // Deduct points from user first
       await this.userService.updatePoints(userId, points);
 
-      // Upload all images to S3
-      const imageKeys = await this.uploadToS3(files);
+      try {
+        // Upload all images to S3
+        const imageKeys = await this.uploadToS3(files);
 
-      // Create new post with multiple images
-      const newPost = new this.postModel({
-        username,
-        caption,
-        images: imageKeys,
-        points,
-        totalLikes: 0,
-        totalComments: 0,
-        userId // Add userId to track post ownership
-      });
+        // Create new post with multiple images
+        const newPost = new this.postModel({
+          username,
+          caption,
+          images: imageKeys,
+          points,
+          totalLikes: 0,
+          totalComments: 0,
+          userId // Add userId to track post ownership
+        });
 
-      const post = await newPost.save({ session });
-      await session.commitTransaction();
-      session.endSession();
-      return post;
-    } catch (error) {
-      // If there's an error after points deduction but before post creation,
-      // we should refund the points
-      if (error.message !== 'Insufficient points') {
-        try {
-          await this.userService.updatePoints(userId, -points); // Refund points
-        } catch (refundError) {
-          console.error('Error refunding points:', refundError);
-        }
+        const post = await newPost.save();
+        return post;
+      } catch (error) {
+        // If there's an error after points deduction, refund the points
+        await this.userService.updatePoints(userId, -points); // Refund points
+        throw error;
       }
-      throw error;
+    } catch (error) {
+      this.logger.error('Error in createPost:', error);
+      if (error.message === 'Insufficient points') {
+        throw new BadRequestException('Insufficient points to create post');
+      }
+      throw new InternalServerErrorException('Failed to create post');
     }
   }
 

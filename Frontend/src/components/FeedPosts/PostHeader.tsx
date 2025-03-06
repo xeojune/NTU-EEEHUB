@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { PostHeaderContainer, FlexContainer, AvatarImage, TextBox, SubText, OptionsButton, PostInformation, SubTextBox } from '../../styles/FeedPosts/PostHeaderStyle'
 import { FiMoreHorizontal } from 'react-icons/fi'
 import ModalCard from '../ModalCard'
 import styled from 'styled-components'
+import { useUser } from '../../context/UserContext'
 
 //showActions added to check if the post belongs to current user logged in (prevent deleting other users' posts)
 interface PostHeaderProps {
@@ -31,7 +32,6 @@ const OptionButton = styled.button`
 
 const PostHeader: React.FC<PostHeaderProps> = ({ 
   username = 'User', 
-  avatar = '/default-avatar.png',
   points,
   createdAt,
   onDelete,
@@ -39,6 +39,19 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   showActions = false
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>('/default-avatar.png');
+  const { getUserAvatar } = useUser();
+
+  useEffect(() => {
+    const loadAvatar = async () => {
+      if (username !== 'User') {
+        const url = await getUserAvatar(username);
+        setAvatarUrl(url);
+      }
+    };
+    
+    loadAvatar();
+  }, [username, getUserAvatar]);
 
   // Function to format the date
   const formatDate = (dateString: string) => {
@@ -61,7 +74,12 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   return (
     <PostHeaderContainer>
       <FlexContainer>
-        <AvatarImage src={avatar} alt={username} />
+        <AvatarImage 
+          src={avatarUrl} 
+          alt={`${username}'s avatar`} 
+          width='32px' 
+          height='32px'
+        />
         <TextBox>
           <PostInformation>
             <TextBox>
@@ -80,7 +98,6 @@ const PostHeader: React.FC<PostHeaderProps> = ({
           <FiMoreHorizontal size={24} />
         </OptionsButton>
       )}
-      
       {showModal && showActions && (
         <ModalCard top="0" onClose={() => setShowModal(false)}>
           {onEdit && (
