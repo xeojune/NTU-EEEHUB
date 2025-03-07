@@ -1,109 +1,236 @@
-import React, { useState } from 'react'
-import { 
-  ActiveChatContainer, 
-  ActiveChatHeader, 
-  UserInfo, 
-  ActionButtons,
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSocket } from '../../hooks/useSocket';
+import { useUser } from '../../context/UserContext';
+import {
+  ActiveChatContainer,
+  ActiveChatHeader,
+  UserInfo,
+  ActiveChatName,
+  ActiveChatStatus,
   ChatArea,
   MessagesContainer,
   MessageBubble,
   ChatInput,
+  NoChatSelected,
   ChatAvatar,
   OnlineStatus,
-  ActiveChatName,
-  ActiveChatStatus
-} from '../../styles/Chat/chatStyle'
-import { BsTelephone, BsCameraVideo } from 'react-icons/bs'
-import { IoSend } from 'react-icons/io5'
-import { FiPaperclip, FiSmile } from 'react-icons/fi'
-import User3ProfileImg from "../../assets/userImg/User3.png"
+  ActionButtons
+} from '../../styles/Chat/chatStyle';
+import { FaVideo, FaPhoneAlt, FaPaperPlane } from 'react-icons/fa';
 
-const Active: React.FC = () => {
-  const [message, setMessage] = useState('')
+interface Message {
+  _id: string;
+  from: string;
+  to: string;
+  content: string;
+  timestamp: string | Date;
+  roomId: string;
+  sender: {
+    _id: string;
+    name: string;
+    profileImg: string;
+  };
+  receiver: {
+    _id: string;
+    name: string;
+    profileImg: string;
+  };
+}
 
-  const dummyMessages = [
-    { id: 1, text: "Hey There....", time: "09:56 am", isOwn: false },
-    { id: 2, text: "How are you?", time: "09:57 am", isOwn: false },
-    { id: 3, text: "Hello", time: "09:57 am", isOwn: true },
-    { id: 4, text: "I'm good, you?", time: "09:57 am", isOwn: true },
-    { id: 5, text: "Can we meet today?", time: "09:57 am", isOwn: false },
-    { id: 6, text: "Oya nw.", time: "09:57 am", isOwn: true },
-  ]
+interface ActiveProps {
+  selectedUserSocketId: string | null;
+  selectedUser?: {
+    name: string;
+    profileImg: string;
+    _id: string;
+  };
+}
 
-  const activeUser = {
-    id: 1,
-    name: "eunwo.o_c",
-    lastMessage: "Oya nw.",
-    time: "Today, 10:09 am",
-    avatar: User3ProfileImg,
-    unreadCount: 0,
-    online: true
-  }
+const Active: React.FC<ActiveProps> = ({ selectedUserSocketId, selectedUser }) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
+  const { socket } = useSocket();
+  const { user } = useUser();
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Handle sending message
-      setMessage('')
+  // Load chat history when user is selected
+  useEffect(() => {
+    if (!socket || !selectedUser || !user) return;
+
+    const loadChatHistory = async () => {
+      try {
+        // First, find or create chat room
+        socket.emit('find_chat_room', {
+          participants: [user._id, selectedUser._id]
+        }, (response: { roomId: string }) => {
+          if (response.roomId) {
+            setCurrentRoomId(response.roomId);
+            // Join room and get history
+            socket.emit('join_room', { roomId: response.roomId });
+          }
+        });
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+      }
+    };
+
+    loadChatHistory();
+  }, [socket, selectedUser, user]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for chat history
+    const handleChatHistory = (history: Message[]) => {
+      setMessages(history);
+    };
+
+    socket.on('chat_history', handleChatHistory);
+
+    return () => {
+      socket.off('chat_history', handleChatHistory);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket || !selectedUser) return;
+
+    // Listen for private messages
+    const handlePrivateMessage = (message: Message) => {
+      // Only add message if it's part of the current conversation
+      if (
+        (message.from === user?._id && message.to === selectedUser._id) ||
+        (message.from === selectedUser._id && message.to === user?._id)
+      ) {
+        setMessages(prev => [...prev, message]);
+      }
+    };
+
+    // Listen for typing indicators
+    const handleTyping = ({ userId }: { userId: string }) => {
+      if (userId === selectedUser._id) {
+        setIsTyping(true);
+      }
+    };
+
+    const handleStopTyping = ({ userId }: { userId: string }) => {
+      if (userId === selectedUser._id) {
+        setIsTyping(false);
+      }
+    };
+
+    socket.on('private_message', handlePrivateMessage);
+    socket.on('typing', handleTyping);
+    socket.on('stop_typing', handleStopTyping);
+
+    return () => {
+      socket.off('private_message', handlePrivateMessage);
+      socket.off('typing', handleTyping);
+      socket.off('stop_typing', handleStopTyping);
+    };
+  }, [socket, selectedUser, user?._id]);
+
+  // Clear messages when switching users
+  useEffect(() => {
+    setMessages([]);
+    setMessageInput('');
+    setIsTyping(false);
+    setCurrentRoomId(null);
+  }, [selectedUserSocketId]);
+
+  const sendMessage = useCallback(() => {
+    if (!selectedUser?._id || !messageInput.trim() || !socket || !user || !currentRoomId) return;
+
+    socket.emit('private_message', {
+      to: selectedUser._id,
+      content: messageInput.trim(),
+      roomId: currentRoomId
+    });
+
+    setMessageInput('');
+    socket.emit('stop_typing', selectedUser._id);
+  }, [socket, selectedUser?._id, messageInput, user, currentRoomId]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageInput(e.target.value);
+    if (selectedUserSocketId && socket) {
+      socket.emit('typing', selectedUserSocketId);
     }
+  };
+
+  if (!selectedUserSocketId || !selectedUser) {
+    return (
+      <NoChatSelected>
+        <h3>Select a user to start chatting</h3>
+      </NoChatSelected>
+    );
   }
 
   return (
     <ActiveChatContainer>
       <ActiveChatHeader>
         <ChatAvatar>
-          <img src={activeUser.avatar} alt={activeUser.name} />
-          {activeUser.online && <OnlineStatus />}
+          <img src={selectedUser.profileImg} alt={selectedUser.name} />
+          <OnlineStatus />
         </ChatAvatar>
         
         <UserInfo>
-          <ActiveChatName>{activeUser.name}</ActiveChatName>
-          <ActiveChatStatus>{activeUser.online ? 'Online' : 'Offline'}</ActiveChatStatus>
+          <ActiveChatName>{selectedUser.name}</ActiveChatName>
+          {isTyping ? (
+            <ActiveChatStatus>typing...</ActiveChatStatus>
+          ) : (
+            <ActiveChatStatus>online</ActiveChatStatus>
+          )}
         </UserInfo>
+
         <ActionButtons>
-          <button><BsTelephone size={20} /></button>
-          <button><BsCameraVideo size={20} /></button>
+          <button>
+            <FaVideo size={20} />
+          </button>
+          <button>
+            <FaPhoneAlt size={20} />
+          </button>
         </ActionButtons>
       </ActiveChatHeader>
 
       <ChatArea>
         <MessagesContainer>
-          {dummyMessages.map((msg, index) => {
-            const isFirstInSequence = index === 0 || dummyMessages[index - 1].isOwn !== msg.isOwn;
-            
-            return (
-              <MessageBubble key={msg.id} isOwn={msg.isOwn}>
-                {!msg.isOwn && isFirstInSequence && (
-                  <ChatAvatar className="message-avatar">
-                    <img src={activeUser.avatar} alt={activeUser.name} />
-                  </ChatAvatar>
-                )}
-                {!msg.isOwn && !isFirstInSequence && <div className="avatar-space" />}
-                <div className="message-content">
-                  <div className="message">{msg.text}</div>
-                  <div className="time">{msg.time}</div>
+          {messages.map((msg) => (
+            <MessageBubble key={msg._id} isOwn={msg.from === user?._id}>
+              <div className="message-content">
+                <div className="message">{msg.content}</div>
+                <div className="time">
+                  {new Date(msg.timestamp).toLocaleString('en-US', {
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true,
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
                 </div>
-              </MessageBubble>
-            );
-          })}
+              </div>
+            </MessageBubble>
+          ))}
         </MessagesContainer>
 
         <ChatInput>
           <div className="input-container">
-            <button><FiPaperclip size={20} /></button>
             <input
-              type="text"
-              placeholder="Type your message here..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              value={messageInput}
+              onChange={handleInputChange}
+              placeholder="Type a message..."
+              onKeyPress={e => e.key === 'Enter' && sendMessage()}
             />
-            <button><FiSmile size={20} /></button>
-            <button onClick={handleSendMessage}><IoSend size={20} /></button>
+            <button onClick={sendMessage}>
+              <FaPaperPlane size={18} />
+            </button>
           </div>
         </ChatInput>
       </ChatArea>
     </ActiveChatContainer>
-  )
-}
+  );
+};
 
-export default Active
+export default Active;

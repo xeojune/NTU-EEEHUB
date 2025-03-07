@@ -2,7 +2,17 @@ import React, { createContext, useState, useContext, useEffect, ReactNode, useCa
 import defaultAvatar from '../assets/userImg/defaultAvatar.png';
 import defaultBackground from '../assets/userImg/defaultBackground.png';
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  profileImg: string;
+  backgroundImg: string;
+  totalPoints: number;
+}
+
 interface UserContextType {
+  user: User | null;
   profileImage: string;
   backgroundImage: string;
   points: number;
@@ -12,6 +22,7 @@ interface UserContextType {
   fetchUserProfile: () => Promise<void>;
   fetchUserProfileByUsername: (username: string) => Promise<any>;
   getUserAvatar: (username: string) => Promise<string>;
+  setUser: (user: User | null) => void;
 }
 
 interface AvatarCache {
@@ -24,6 +35,7 @@ interface AvatarCache {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [profileImage, setProfileImage] = useState<string>(defaultAvatar);
   const [backgroundImage, setBackgroundImage] = useState<string>(defaultBackground);
   const [points, setPoints] = useState<number>(0);
@@ -37,6 +49,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await fetch(`http://localhost:3000/users/${userId}/profile`);
       const userData = await response.json();
       
+      setUser({
+        _id: userId,
+        name: userData.name,
+        email: userData.email,
+        profileImg: userData.profileImg || defaultAvatar,
+        backgroundImg: userData.backgroundImg || defaultBackground,
+        totalPoints: userData.totalPoints || 0
+      });
+
       if (userData.profileImg) {
         setProfileImage(userData.profileImg);
       }
@@ -54,72 +75,64 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const fetchUserProfileByUsername = async (username: string) => {
     try {
       const response = await fetch(`http://localhost:3000/users/name/${username}/profile`);
-      if (!response.ok) {
-        console.error('Failed to fetch user profile:', username);
-        return { profileImg: defaultAvatar, totalPoints: 0 };
-      }
-      const userData = await response.json();
-      return {
-        profileImg: userData.profileImg || defaultAvatar,
-        totalPoints: userData.totalPoints || 0
-      };
+      return await response.json();
     } catch (error) {
       console.error('Error fetching user profile by username:', error);
-      return { profileImg: defaultAvatar, totalPoints: 0 };
+      return null;
     }
   };
 
-  const getUserAvatar = useCallback(async (username: string): Promise<string> => {
-    const currentTime = Date.now();
-    const cacheExpiration = 5 * 60 * 1000; // 5 minutes
-
-    // Check if we have a cached avatar URL that's not expired
-    const cachedData = avatarCache[username];
-    if (cachedData && (currentTime - cachedData.timestamp) < cacheExpiration) {
-      return cachedData.url;
+  const getUserAvatar = async (username: string) => {
+    // Check cache first
+    const cached = avatarCache[username];
+    if (cached && Date.now() - cached.timestamp < 3600000) { // 1 hour cache
+      return cached.url;
     }
 
-    // If not cached or expired, fetch new avatar
-    const userData = await fetchUserProfileByUsername(username);
-    const avatarUrl = userData.profileImg;
+    try {
+      const userProfile = await fetchUserProfileByUsername(username);
+      const avatarUrl = userProfile?.profileImg || defaultAvatar;
+      
+      // Update cache
+      setAvatarCache(prev => ({
+        ...prev,
+        [username]: {
+          url: avatarUrl,
+          timestamp: Date.now()
+        }
+      }));
 
-    // Update cache
-    setAvatarCache(prev => ({
-      ...prev,
-      [username]: {
-        url: avatarUrl,
-        timestamp: currentTime
-      }
-    }));
-
-    return avatarUrl;
-  }, [avatarCache]);
+      return avatarUrl;
+    } catch (error) {
+      console.error('Error getting user avatar:', error);
+      return defaultAvatar;
+    }
+  };
 
   const clearUserData = () => {
+    setUser(null);
     setProfileImage(defaultAvatar);
     setBackgroundImage(defaultBackground);
     setPoints(0);
-    setAvatarCache({});
   };
 
   useEffect(() => {
-    const userId = localStorage.getItem('userId');
-    if (userId) {
-      fetchUserProfile();
-    }
+    fetchUserProfile();
   }, []);
 
   return (
     <UserContext.Provider value={{
+      user,
       profileImage,
       backgroundImage,
       points,
+      setUser,
       setProfileImage,
       setBackgroundImage,
       clearUserData,
       fetchUserProfile,
       fetchUserProfileByUsername,
-      getUserAvatar,
+      getUserAvatar
     }}>
       {children}
     </UserContext.Provider>
