@@ -22,6 +22,7 @@ interface ChatMessage {
 
 export const useSocket = () => {
   const { user } = useUser();
+  const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -33,17 +34,24 @@ export const useSocket = () => {
 
     // Create socket connection
     const socket = io(SOCKET_SERVER_URL, {
-      transports: ['websocket'],
-      autoConnect: true,
+      transports: ['websocket', 'polling'],
+      autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000
     });
 
     // Store socket in ref
     socketRef.current = socket;
 
+    // Connect socket manually
+    socket.connect();
+
     // Connect event
     socket.on('connect', () => {
-      console.log('Socket connected');
-      
+      console.log('Socket connected successfully');
+      setIsConnected(true);
       // Join chat when connected with user info
       socket.emit('join_chat', {
         userId: user._id,
@@ -54,8 +62,11 @@ export const useSocket = () => {
 
     // Listen for online users updates
     socket.on('online_users', (users: OnlineUser[]) => {
-      // Filter out current user from the list
-      setOnlineUsers(users.filter(u => u.userId !== user._id));
+      console.log('Received online users update:', users);
+      // Filter out current user from the list and update state
+      const filteredUsers = users.filter(u => u.userId !== user._id);
+      console.log('Filtered online users:', filteredUsers);
+      setOnlineUsers(filteredUsers);
     });
 
     // Listen for private messages
@@ -66,6 +77,32 @@ export const useSocket = () => {
     // Listen for chat history
     socket.on('chat_history', (history: ChatMessage[]) => {
       setMessages(history);
+    });
+
+    // Add reconnect event handlers
+    socket.on('reconnect_attempt', (attempt) => {
+      console.log(`Reconnection attempt ${attempt}`);
+    });
+
+    socket.on('reconnect', () => {
+      console.log('Reconnected successfully');
+      setIsConnected(true);
+      // Re-join chat after reconnection with a small delay to ensure proper order
+      if (user?._id) {
+        setTimeout(() => {
+          socket.emit('join_chat', {
+            userId: user._id,
+            name: user.name,
+            profileImg: user.profileImg
+          });
+        }, 100);
+      }
+    });
+
+    // Listen for user_offline events
+    socket.on('user_offline', (userId: string) => {
+      console.log('User went offline:', userId);
+      setOnlineUsers(prev => prev.filter(u => u.userId !== userId));
     });
 
     // Error handling
@@ -81,6 +118,7 @@ export const useSocket = () => {
     return () => {
       if (socket) {
         socket.disconnect();
+        setIsConnected(false);
         socketRef.current = null;
       }
     };
@@ -107,7 +145,7 @@ export const useSocket = () => {
 
   return {
     socket: socketRef.current,
-    isConnected: socketRef.current?.connected || false,
+    isConnected,
     onlineUsers,
     messages,
     activeRoom,

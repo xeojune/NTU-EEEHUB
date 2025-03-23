@@ -4,8 +4,11 @@ import { User } from 'src/auth/schemas/user.schema';
 
 export type PostDocument = Post & Document;
 
-@Schema({ id: true, timestamps: true })
+@Schema({ timestamps: true })
 export class Post {
+  @Prop({ type: MongooseSchema.Types.ObjectId, auto: true })
+  _id: string;
+
   @Prop({ required: true })
   username: string;
 
@@ -18,11 +21,17 @@ export class Post {
   @Prop({ required: true })
   images: string[];  // Store the S3 key (filename)
 
-  @Prop({ required: true, type: Number })
-  points: number;
+  @Prop({ required: true, min: 0, type: Number })
+  points: number; // Total points allocated to the post
 
-  @Prop({ default: 0 })
-  totalLikes: number;
+  @Prop({ required: true, min: 0, type: Number })
+  remainingPoints: number; // Points available for distribution
+
+  @Prop({ default: 0, type: Number })
+  distributedPoints: number;  // Track points that have been distributed
+
+  @Prop({ default: 0, type: Number })
+  totalLikes: number;  // Track total number of likes on the post
 
   @Prop({ default: 0 })
   totalComments: number;
@@ -32,3 +41,5 @@ export class Post {
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
+
+// We'll use MongoDB's _id as our postId

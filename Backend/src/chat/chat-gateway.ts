@@ -48,7 +48,14 @@ interface SuccessResponse {
 
 type MessageResponse = SuccessResponse | ErrorResponse;
 
-@WebSocketGateway(3002, {cors: {origin: '*'}})
+@WebSocketGateway(3002, {
+  cors: {
+    origin: ['http://localhost:3000', 'http://localhost:5173'],  
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
+})
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer() server: Server;
     private logger = new Logger('ChatGateway');
@@ -66,6 +73,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         for (const [userId, connection] of this.userSocketMap.entries()) {
             if (connection.socketId === client.id) {
                 this.userSocketMap.delete(userId);
+                this.logger.debug(`User ${userId} (${connection.name}) disconnected`);
                 // Notify others that user went offline
                 this.server.emit('user_offline', userId);
                 // Broadcast updated online users list
@@ -91,6 +99,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 name: userData.name,
                 profileImg: userData.profileImg || ''
             });
+
+            this.logger.debug(`User joined: ${userData.name} (${userData.userId})`);
 
             this.broadcastOnlineUsers();
             return { status: 'joined' };

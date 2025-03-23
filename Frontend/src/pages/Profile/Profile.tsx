@@ -38,7 +38,7 @@ const Profile: React.FC = () => {
     const backgroundFileInputRef = useRef<HTMLInputElement>(null);
     const currentUsername = localStorage.getItem('username');
     const userId = localStorage.getItem('userId'); // Make sure you store userId during login
-    const { profileImage, backgroundImage, setProfileImage, setBackgroundImage, points } = useUser();
+    const { profileImage, backgroundImage, setProfileImage, setBackgroundImage, points, user, fetchUserProfile } = useUser();
 
     //handle concurrent fetching with Promise.all (before had 2 useEffect)
     useEffect(() => {
@@ -47,7 +47,10 @@ const Profile: React.FC = () => {
             
             setLoading(true);
             try {
-                const response = await fetch('http://localhost:3000/api/posts');
+                // Fetch user profile to get updated follower/following counts
+                await fetchUserProfile();
+                
+                const response = await fetch(`http://localhost:3000/api/posts?userId=${userId}`);
                 const allPosts = await response.json();
 
                 // Filter posts by the current user
@@ -64,7 +67,7 @@ const Profile: React.FC = () => {
         };
 
         fetchData();
-    }, [userId, currentUsername]);
+    }, [userId, currentUsername, fetchUserProfile]);
 
     const handlePostDeleted = (postId: string) => {
         setUserPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
@@ -195,6 +198,7 @@ const Profile: React.FC = () => {
                         </ProfileImageContainer>
                         <ProfileInfo>
                             <h1>{currentUsername}</h1>
+                            <p>{user?.followerCount || 0} Followers · {user?.followingCount || 0} Following</p>
                             <p>Rank: Advanced</p>
                             <p>Points: {points}</p>
                         </ProfileInfo>

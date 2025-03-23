@@ -4,7 +4,7 @@ import axios from 'axios';
 const postApiInstance = axios.create({
   baseURL: 'http://localhost:3000', // Replace with your backend's base URL
   headers: {
-    'Content-Type': 'multipart/form-data', // Set default Content-Type for form data
+    'Content-Type': 'application/json', // Default to JSON
   },
 });
 
@@ -17,5 +17,15 @@ postApiInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// For multipart/form-data requests (like file uploads), override the Content-Type header
+export const setMultipartHeader = () => {
+  postApiInstance.defaults.headers['Content-Type'] = 'multipart/form-data';
+};
+
+// For JSON requests, override the Content-Type header
+export const setJsonHeader = () => {
+  postApiInstance.defaults.headers['Content-Type'] = 'application/json';
+};
 
 export default postApiInstance;

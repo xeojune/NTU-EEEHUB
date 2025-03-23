@@ -1,5 +1,9 @@
 import styled from "styled-components";
 
+interface AddFriendButtonProps {
+  $isFollowing: boolean;
+}
+
 export const Card = styled.div`
   display: flex;
   flex-direction: column;
@@ -11,10 +15,12 @@ export const Card = styled.div`
   background: white;
 `;
 
-export const CoverImage = styled.div`
+export const CoverImage = styled.div<{ url: string }>`
   width: 100%;
   height: 100px;
-  background-color: #1a1a1a;
+  background-image: url(${props => props.url});
+  background-size: cover;
+  background-position: center;
   position: relative;
   margin-bottom: 30px;
   border-radius: 8px 8px 0 0;
@@ -57,9 +63,9 @@ export const Description = styled.p`
   overflow-y: auto; 
 `;
 
-export const AddFriendButton = styled.button`
-  background-color: #000;
-  color: white;
+export const AddFriendButton = styled.button<AddFriendButtonProps>`
+  background: ${props => props.$isFollowing ? '#e0e0e0' : '#000'};
+  color: ${props => props.$isFollowing ? '#666' : 'white'};
   border: none;
   padding: 10px 16px;
   border-radius: 4px;
@@ -74,6 +80,6 @@ export const AddFriendButton = styled.button`
   font-size: 0.9rem;
 
   &:hover {
-    background-color: #333;
+    background: ${props => props.$isFollowing ? '#d0d0d0' : '#333'};
   }
 `;

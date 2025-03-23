@@ -7,6 +7,7 @@ export interface FeedPostProps {
     centerX?: number;
     centerY?: number;
     points: number;
+    distributedPoints: number;
     totalLikes: number;
     totalComments: number;
     createdAt: string;

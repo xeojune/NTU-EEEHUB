@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { useSocket } from '../../hooks/useSocket';
+import { useMutualFriends } from '../../hooks/useMutualFriends';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { useChatMessages } from '../../hooks/useChatMessages';
 
 interface IndividualProps {
   onUserSelect: (user: { socketId: string; _id: string; name: string; profileImg: string }) => void;
@@ -11,42 +14,98 @@ const Individual: React.FC<IndividualProps> = ({
   onUserSelect, 
   selectedUserSocketId 
 }) => {
-  const { onlineUsers } = useSocket();
+  const { socket, onlineUsers } = useSocket();
+  const currentUserId = localStorage.getItem('userId');
+
+  // Step 1: Get mutual friends
+  const { mutualFriends } = useMutualFriends(currentUserId);
+  
+  // Step 2: Update online status
+  const friendsWithStatus = useOnlineStatus(mutualFriends, onlineUsers);
+  
+  // Step 3: Handle messages
+  const friendsWithMessages = useChatMessages(socket, currentUserId, friendsWithStatus);
+
+  const getRelativeTime = (timestamp: string) => {
+    const now = new Date();
+    const messageDate = new Date(timestamp);
+    const diffInMilliseconds = now.getTime() - messageDate.getTime();
+    const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
+    const diffInHours = Math.floor(diffInMilliseconds / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+    } else {
+      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+    }
+  };
 
   return (
-    <UserList>
-      {onlineUsers.map(user => (
-        <UserItem 
-          key={user.socketId}
-          onClick={() => onUserSelect({
-            socketId: user.socketId,
-            _id: user.userId,
-            name: user.name,
-            profileImg: user.profileImg
-          })}
-          selected={selectedUserSocketId === user.socketId}
-        >
-          <UserAvatar src={user.profileImg} alt={user.name} />
-          <UserInfo>
-            <UserName>{user.name}</UserName>
-            <OnlineStatus>Online</OnlineStatus>
-          </UserInfo>
-        </UserItem>
-      ))}
-      {onlineUsers.length === 0 && (
-        <NoUsersMessage>No users online</NoUsersMessage>
-      )}
-    </UserList>
+    <Container>
+      <Heading>Friends</Heading>
+      <UserList>
+        {friendsWithMessages && friendsWithMessages.length > 0 ? (
+          friendsWithMessages.map(friend => (
+            <UserItem 
+              key={friend.userId}
+              onClick={() => {
+                onUserSelect({
+                  socketId: friend.socketId || '',
+                  _id: friend.userId,
+                  name: friend.name,
+                  profileImg: friend.profileImg
+                });
+              }}
+              selected={selectedUserSocketId === friend.socketId}
+              isOnline={friend.isOnline}
+            >
+              <UserAvatar src={friend.profileImg} alt={friend.name} />
+              <UserInfo>
+                <UserName>{friend.name}</UserName>
+                <LastMessageContainer>
+                  <LastMessage>{friend.lastMessage || 'No messages yet'}</LastMessage>
+                  {friend.lastMessageTime && (
+                    <MessageTime>
+                      {getRelativeTime(friend.lastMessageTime)}
+                    </MessageTime>
+                  )}
+                </LastMessageContainer>
+                <OnlineStatus isOnline={friend.isOnline}>
+                  {friend.isOnline ? 'Online' : 'Offline'}
+                </OnlineStatus>
+              </UserInfo>
+            </UserItem>
+          ))
+        ) : (
+          <NoUsersMessage>No mutual friends found</NoUsersMessage>
+        )}
+      </UserList>
+    </Container>
   );
 };
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  border-bottom: 1px solid #eef2f7;
+`;
+
+const Heading = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 1rem 1.5rem;
+`;
 
 const UserList = styled.div`
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   padding: 1rem 0;
 
   &::-webkit-scrollbar {
@@ -58,43 +117,30 @@ const UserList = styled.div`
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #ddd;
+    background: #888;
     border-radius: 3px;
   }
 `;
 
-const UserItem = styled.div<{ selected?: boolean }>`
+const UserItem = styled.div<{ selected?: boolean; isOnline: boolean }>`
   display: flex;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   cursor: pointer;
-  background: ${props => props.selected ? 'rgba(0, 122, 255, 0.08)' : 'transparent'};
-  position: relative;
+  background: ${props => props.selected ? '#f0f2f5' : 'transparent'};
+  opacity: 1
   transition: all 0.2s ease;
+  border-bottom: 1px solid #eef2f7;
 
   &:hover {
-    background: rgba(0, 122, 255, 0.05);
+    background: ${props => props.selected ? '#f0f2f5' : 'transparent'};
   }
-
-  ${props => props.selected && `
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: #007AFF;
-      border-radius: 0 4px 4px 0;
-    }
-  `}
 `;
 
 const UserAvatar = styled.img`
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  margin-right: 1rem;
   object-fit: cover;
   border: 2px solid white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -106,6 +152,7 @@ const UserAvatar = styled.img`
 `;
 
 const UserInfo = styled.div`
+  margin-left: 12px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -113,31 +160,47 @@ const UserInfo = styled.div`
 `;
 
 const UserName = styled.div`
-  font-weight: 600;
+  font-weight: 500;
   color: #1a1a1a;
-  font-size: 0.95rem;
-  transition: color 0.2s ease;
-
-  ${UserItem}:hover & {
-    color: #007AFF;
-  }
+  margin-bottom: 2px;
 `;
 
-const OnlineStatus = styled.div`
-  font-size: 0.8rem;
-  color: #4CAF50;
+const LastMessageContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 2px 0;
+`;
+
+const LastMessage = styled.span`
+  font-size: 0.9em;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+`;
+
+const MessageTime = styled.span`
+  font-size: 0.8em;
+  color: #999;
+`;
+
+const OnlineStatus = styled.div<{ isOnline: boolean }>`
   display: flex;
   align-items: center;
-  gap: 4px;
+  font-size: 0.85rem;
+  color: ${props => props.isOnline ? '#2ecc71' : '#95a5a6'};
 
   &::before {
     content: '';
     display: inline-block;
     width: 8px;
     height: 8px;
-    background: #4CAF50;
     border-radius: 50%;
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    background-color: ${props => props.isOnline ? '#2ecc71' : '#95a5a6'};
+    margin-right: 6px;
   }
 `;
 

@@ -85,7 +85,7 @@ export class UserService {
   
 
   //update user points
-  async updatePoints(userId: String, pointsToDeduct: number, session?: ClientSession): Promise<number> {
+  async updatePoints(userId: String, pointsToAdd: number, session?: ClientSession): Promise<number> {
     let query = this.userModel.findById(userId);
     if(session) { 
       query = query.session(session);
@@ -96,10 +96,49 @@ export class UserService {
       throw new Error('User not found');
     }
     
-    if (user.totalPoints < pointsToDeduct) {
+    // Add points instead of subtracting
+    user.totalPoints += pointsToAdd;
+    await user.save(session ? { session } : {});
+    return user.totalPoints;
+  }
+
+  // Deduct points from user
+  async deductPoints(userId: string, points: number, session?: ClientSession): Promise<number> {
+    let query = this.userModel.findById(userId);
+    if(session) { 
+      query = query.session(session);
+    }
+    const user = await query.exec();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if user has enough points
+    if (user.totalPoints < points) {
       throw new Error('Insufficient points');
     }
-    user.totalPoints -= pointsToDeduct;
+
+    // Deduct points
+    user.totalPoints -= points;
+    await user.save(session ? { session } : {});
+    return user.totalPoints;
+  }
+
+  // Add points to user
+  async addPoints(userId: string, points: number, session?: ClientSession): Promise<number> {
+    let query = this.userModel.findById(userId);
+    if(session) { 
+      query = query.session(session);
+    }
+    const user = await query.exec();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Add points
+    user.totalPoints += points;
     await user.save(session ? { session } : {});
     return user.totalPoints;
   }

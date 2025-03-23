@@ -16,8 +16,8 @@ export class ChatMessage extends Document {
     @Prop({ default: 'text' })
     messageType: string;
 
-    @Prop({ default: false })
-    isRead: boolean;
+    @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+    readBy: User[];
 
     @Prop({ default: Date.now })
     createdAt: Date;
@@ -42,6 +42,9 @@ export class ChatRoom extends Document {
 
     @Prop({ default: '' })
     groupName: string;
+
+    @Prop({ type: Types.ObjectId, ref: 'User' })
+    groupAdmin: User;
 }
 
 export const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);

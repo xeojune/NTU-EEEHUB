@@ -59,15 +59,23 @@ const Active: React.FC<ActiveProps> = ({ selectedUserSocketId, selectedUser }) =
     if (!socket || !selectedUser || !user) return;
 
     const loadChatHistory = async () => {
+      if (!selectedUser || !user) return;
+      
       try {
+        console.log('Finding chat room for users:', user._id, selectedUser._id);
         // First, find or create chat room
         socket.emit('find_chat_room', {
           participants: [user._id, selectedUser._id]
         }, (response: { roomId: string }) => {
           if (response.roomId) {
+            console.log('Chat room found:', response.roomId);
             setCurrentRoomId(response.roomId);
             // Join room and get history
             socket.emit('join_room', { roomId: response.roomId });
+            // Request chat history even if the user is offline
+            socket.emit('get_chat_history', { roomId: response.roomId });
+          } else {
+            console.log('No chat room found');
           }
         });
       } catch (error) {
@@ -78,30 +86,21 @@ const Active: React.FC<ActiveProps> = ({ selectedUserSocketId, selectedUser }) =
     loadChatHistory();
   }, [socket, selectedUser, user]);
 
+  // Listen for chat history and messages
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !currentRoomId) return;
 
     // Listen for chat history
     const handleChatHistory = (history: Message[]) => {
       setMessages(history);
     };
 
-    socket.on('chat_history', handleChatHistory);
-
-    return () => {
-      socket.off('chat_history', handleChatHistory);
-    };
-  }, [socket]);
-
-  useEffect(() => {
-    if (!socket || !selectedUser) return;
-
     // Listen for private messages
     const handlePrivateMessage = (message: Message) => {
       // Only add message if it's part of the current conversation
       if (
-        (message.from === user?._id && message.to === selectedUser._id) ||
-        (message.from === selectedUser._id && message.to === user?._id)
+        (message.from === user?._id && message.to === selectedUser?._id) ||
+        (message.from === selectedUser?._id && message.to === user?._id)
       ) {
         setMessages(prev => [...prev, message]);
       }
@@ -109,27 +108,32 @@ const Active: React.FC<ActiveProps> = ({ selectedUserSocketId, selectedUser }) =
 
     // Listen for typing indicators
     const handleTyping = ({ userId }: { userId: string }) => {
-      if (userId === selectedUser._id) {
+      if (userId === selectedUser?._id) {
         setIsTyping(true);
       }
     };
 
     const handleStopTyping = ({ userId }: { userId: string }) => {
-      if (userId === selectedUser._id) {
+      if (userId === selectedUser?._id) {
         setIsTyping(false);
       }
     };
 
+    socket.on('chat_history', handleChatHistory);
     socket.on('private_message', handlePrivateMessage);
     socket.on('typing', handleTyping);
     socket.on('stop_typing', handleStopTyping);
 
+    // Request chat history when listeners are set up
+    socket.emit('get_chat_history', { roomId: currentRoomId });
+
     return () => {
+      socket.off('chat_history', handleChatHistory);
       socket.off('private_message', handlePrivateMessage);
       socket.off('typing', handleTyping);
       socket.off('stop_typing', handleStopTyping);
     };
-  }, [socket, selectedUser, user?._id]);
+  }, [socket, currentRoomId, selectedUser?._id, user?._id]);
 
   // Clear messages when switching users
   useEffect(() => {
@@ -154,6 +158,13 @@ const Active: React.FC<ActiveProps> = ({ selectedUserSocketId, selectedUser }) =
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessageInput(e.target.value);
+    if (selectedUserSocketId && socket) {
+      socket.emit('typing', selectedUserSocketId);
+    }
+  };
+
+  const handleClick = () => {
+    if (!selectedUserSocketId || !selectedUser) return;
     if (selectedUserSocketId && socket) {
       socket.emit('typing', selectedUserSocketId);
     }
@@ -185,10 +196,10 @@ const Active: React.FC<ActiveProps> = ({ selectedUserSocketId, selectedUser }) =
         </UserInfo>
 
         <ActionButtons>
-          <button>
+          <button onClick={handleClick}>
             <FaVideo size={20} />
           </button>
-          <button>
+          <button onClick={handleClick}>
             <FaPhoneAlt size={20} />
           </button>
         </ActionButtons>

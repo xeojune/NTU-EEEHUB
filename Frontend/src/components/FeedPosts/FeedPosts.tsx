@@ -5,7 +5,7 @@ import FeedPost from './FeedPost';
 import { FeedPostProps } from '../../types/postType';
 import { usePosts, invalidatePostsCache } from '../../apis/getPostsApi';
 import { LoadingSpinner } from '../LoadingSpinner';
-import User1Profile from '../../assets/userImg/User1.png';
+import defaultUserProfile from '../../assets/userImg/defaultAvatar.png'
 import { useQueryClient } from '@tanstack/react-query';
 
 const FeedPosts: React.FC = () => {
@@ -77,7 +77,7 @@ const FeedPosts: React.FC = () => {
               <FeedPost
                 {...post}
                 username={post.username || 'dex_xeb'}
-                avatar={post.avatar || User1Profile}
+                avatar={post.avatar || defaultUserProfile}
                 onPostDeleted={handlePostDeleted}
               />
             </div>
@@ -88,7 +88,7 @@ const FeedPosts: React.FC = () => {
             key={post._id}
             {...post}
             username={post.username || 'dex_xeb'}
-            avatar={post.avatar || User1Profile}
+            avatar={post.avatar || defaultUserProfile}
             onPostDeleted={handlePostDeleted}
           />
         );

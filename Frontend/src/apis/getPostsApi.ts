@@ -19,6 +19,13 @@ export const getPosts = async ({ page = 1, username }: GetPostsParams = {}): Pro
     if (username) {
       params.append('username', username);
     }
+
+    // Get the current user's ID from localStorage
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+    params.append('userId', userId);
     
     const response = await axios.get(`http://localhost:3000/api/posts?${params.toString()}`);
     return response.data;
@@ -35,7 +42,7 @@ export function usePosts({ page = 1, username }: { page: number; username: strin
 
   return useQuery({
     queryFn: () => getPosts({ page, username }),
-    queryKey: [POSTS_QUERY_KEY, page],
+    queryKey: [POSTS_QUERY_KEY, page, username],
     staleTime: 0, // Always treat data as stale to ensure fresh data on refetch
   });
 }

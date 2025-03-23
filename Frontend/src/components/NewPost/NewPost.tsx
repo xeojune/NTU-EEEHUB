@@ -224,13 +224,27 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
             croppedAreaPixels[index] && croppedImages[index]
           );
 
-          // if (!allImagesCropped) {
-          //   alert('Please crop all images before proceeding');
-          //   // Go back to the first uncropped image
-          //   const firstUncropped = croppedImages.findIndex(img => !img);
-          //   setCurrentImageIndex(firstUncropped >= 0 ? firstUncropped : 0);
-          //   return;
-          // }
+          if (!allImagesCropped) {
+            // Find any uncropped images and process them
+            const uncropedPromises = uploadedImages.map(async (img, index) => {
+              if (!croppedImages[index] && croppedAreaPixels[index]) {
+                const croppedUrl = await getCroppedImg(img, croppedAreaPixels[index]);
+                return { index, url: croppedUrl };
+              }
+              return null;
+            });
+
+            const results = await Promise.all(uncropedPromises);
+            setCroppedImages(prev => {
+              const newCroppedImages = [...prev];
+              results.forEach(result => {
+                if (result) {
+                  newCroppedImages[result.index] = result.url;
+                }
+              });
+              return newCroppedImages;
+            });
+          }
 
           setIsCaptionVisible(true);
           setIsCropping(false);
@@ -269,16 +283,45 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
 
     try {
       setIsSubmitting(true);
+      console.log('Starting submission with', croppedImages.length, 'cropped images');
+      
+      // Ensure all images are cropped before proceeding
+      const allImagesCropped = uploadedImages.every((_, index) => croppedImages[index]);
+      if (!allImagesCropped) {
+        const uncropedPromises = uploadedImages.map(async (img, index) => {
+          if (!croppedImages[index] && croppedAreaPixels[index]) {
+            const croppedUrl = await getCroppedImg(img, croppedAreaPixels[index]);
+            return { index, url: croppedUrl };
+          }
+          return null;
+        });
+
+        const results = await Promise.all(uncropedPromises);
+        setCroppedImages(prev => {
+          const newCroppedImages = [...prev];
+          results.forEach(result => {
+            if (result) {
+              newCroppedImages[result.index] = result.url;
+            }
+          });
+          return newCroppedImages;
+        });
+      }
+
+      // Convert all cropped images to files
       const files = await Promise.all(
-        croppedImages.map(async (dataUrl, index) => {
+        croppedImages.filter(Boolean).map(async (dataUrl, index) => {
+          console.log(`Processing image ${index + 1}/${croppedImages.length}`);
           const response = await fetch(dataUrl);
           const blob = await response.blob();
-          // Create unique filename for each image
           const timestamp = Date.now();
-          return new File([blob], `image-${timestamp}-${index}.jpg`, { type: 'image/jpeg' });
+          const file = new File([blob], `image-${timestamp}-${index}.jpg`, { type: 'image/jpeg' });
+          console.log(`Created file: ${file.name}, size: ${file.size} bytes`);
+          return file;
         })
       );
 
+      console.log(`Submitting ${files.length} files for upload`);
       createPostMutation.mutate({
         files,
         caption,

@@ -9,6 +9,8 @@ interface User {
   profileImg: string;
   backgroundImg: string;
   totalPoints: number;
+  followerCount: number;
+  followingCount: number;
 }
 
 interface UserContextType {
@@ -16,16 +18,26 @@ interface UserContextType {
   profileImage: string;
   backgroundImage: string;
   points: number;
+  followerCount: number;
+  followingCount: number;
   setProfileImage: (url: string) => void;
   setBackgroundImage: (url: string) => void;
   clearUserData: () => void;
   fetchUserProfile: () => Promise<void>;
   fetchUserProfileByUsername: (username: string) => Promise<any>;
   getUserAvatar: (username: string) => Promise<string>;
+  getUserBackground: (username: string) => Promise<string>;
   setUser: (user: User | null) => void;
 }
 
 interface AvatarCache {
+  [username: string]: {
+    url: string;
+    timestamp: number;
+  };
+}
+
+interface BackgroundCache {
   [username: string]: {
     url: string;
     timestamp: number;
@@ -39,9 +51,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [profileImage, setProfileImage] = useState<string>(defaultAvatar);
   const [backgroundImage, setBackgroundImage] = useState<string>(defaultBackground);
   const [points, setPoints] = useState<number>(0);
+  const [followerCount, setFollowerCount] = useState<number>(0);
+  const [followingCount, setFollowingCount] = useState<number>(0);
   const [avatarCache, setAvatarCache] = useState<AvatarCache>({});
+  const [backgroundCache, setBackgroundCache] = useState<BackgroundCache>({});
   
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     const userId = localStorage.getItem('userId');
     if (!userId) return;
     
@@ -55,7 +70,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: userData.email,
         profileImg: userData.profileImg || defaultAvatar,
         backgroundImg: userData.backgroundImg || defaultBackground,
-        totalPoints: userData.totalPoints || 0
+        totalPoints: userData.totalPoints || 0,
+        followerCount: userData.followerCount || 0,
+        followingCount: userData.followingCount || 0
       });
 
       if (userData.profileImg) {
@@ -67,12 +84,18 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (userData.totalPoints !== undefined) {
         setPoints(userData.totalPoints);
       }
+      if (userData.followerCount !== undefined) {
+        setFollowerCount(userData.followerCount);
+      }
+      if (userData.followingCount !== undefined) {
+        setFollowingCount(userData.followingCount);
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
-  };
+  }, []);
 
-  const fetchUserProfileByUsername = async (username: string) => {
+  const fetchUserProfileByUsername = useCallback(async (username: string) => {
     try {
       const response = await fetch(`http://localhost:3000/users/name/${username}/profile`);
       return await response.json();
@@ -80,9 +103,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Error fetching user profile by username:', error);
       return null;
     }
-  };
+  }, []);
 
-  const getUserAvatar = async (username: string) => {
+  const getUserAvatar = useCallback(async (username: string) => {
     // Check cache first
     const cached = avatarCache[username];
     if (cached && Date.now() - cached.timestamp < 3600000) { // 1 hour cache
@@ -93,7 +116,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const userProfile = await fetchUserProfileByUsername(username);
       const avatarUrl = userProfile?.profileImg || defaultAvatar;
       
-      // Update cache
       setAvatarCache(prev => ({
         ...prev,
         [username]: {
@@ -107,18 +129,46 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Error getting user avatar:', error);
       return defaultAvatar;
     }
-  };
+  }, [avatarCache, fetchUserProfileByUsername]);
 
-  const clearUserData = () => {
+  const getUserBackground = useCallback(async (username: string) => {
+    // Check cache first
+    const cached = backgroundCache[username];
+    if (cached && Date.now() - cached.timestamp < 3600000) { // 1 hour cache
+      return cached.url;
+    }
+
+    try {
+      const userProfile = await fetchUserProfileByUsername(username);
+      const backgroundUrl = userProfile?.backgroundImg || defaultBackground;
+      
+      setBackgroundCache(prev => ({
+        ...prev,
+        [username]: {
+          url: backgroundUrl,
+          timestamp: Date.now()
+        }
+      }));
+
+      return backgroundUrl;
+    } catch (error) {
+      console.error('Error getting user background:', error);
+      return defaultBackground;
+    }
+  }, [backgroundCache, fetchUserProfileByUsername]);
+
+  const clearUserData = useCallback(() => {
     setUser(null);
     setProfileImage(defaultAvatar);
     setBackgroundImage(defaultBackground);
     setPoints(0);
-  };
+    setFollowerCount(0);
+    setFollowingCount(0);
+  }, []);
 
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+  }, [fetchUserProfile]);
 
   return (
     <UserContext.Provider value={{
@@ -126,13 +176,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       profileImage,
       backgroundImage,
       points,
-      setUser,
+      followerCount,
+      followingCount,
       setProfileImage,
       setBackgroundImage,
       clearUserData,
       fetchUserProfile,
       fetchUserProfileByUsername,
-      getUserAvatar
+      getUserAvatar,
+      getUserBackground,
+      setUser,
     }}>
       {children}
     </UserContext.Provider>

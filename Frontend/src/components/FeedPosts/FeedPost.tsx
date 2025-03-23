@@ -22,6 +22,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
   totalLikes,
   totalComments,
   points,
+  distributedPoints,
   centerX,
   centerY,
   createdAt,
@@ -116,7 +117,17 @@ const FeedPost: React.FC<FeedPostProps> = ({
           </>
         )}
       </ImageContainer>
-      <PostFooter totalLikes={totalLikes} totalComments={totalComments}/>
+      <PostFooter 
+        postId={_id}
+        totalLikes={totalLikes} 
+        totalComments={totalComments}
+        postImage={imageUrls}
+        username={username}
+        avatar={avatar}
+        points={points}
+        distributedPoints={distributedPoints}
+        date={createdAt}
+      />
     </FeedPostContainer>
   );
 };

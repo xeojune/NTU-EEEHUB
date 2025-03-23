@@ -16,6 +16,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { PostService } from './post.service';
 import { Post as Posts } from './schemas/post.schema';
+import { Logger } from '@nestjs/common';
 
 interface PostResponse extends Posts {
   imageUrls: string[];
@@ -23,6 +24,7 @@ interface PostResponse extends Posts {
 
 @Controller('/api/posts')
 export class PostController {
+  private readonly logger = new Logger(PostController.name);
   constructor(private readonly postService: PostService) {}
   
   // POST: Create a new post with memory storage for images
@@ -49,6 +51,8 @@ export class PostController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     try {
+      this.logger.debug(`Received createPost request with ${files?.length || 0} files`);
+      
       if (!files || files.length === 0) {
         throw new Error('No files uploaded');
       }
@@ -58,6 +62,8 @@ export class PostController {
       if (!userId) {
         throw new Error('User ID is required');
       }
+
+      this.logger.debug(`Files received: ${files.map(f => f.originalname).join(', ')}`);
 
       // Convert points to number
       const pointsNumber = parseInt(points, 10);
@@ -72,9 +78,11 @@ export class PostController {
         userId,
         username
       );
+      
+      this.logger.debug(`Post created successfully with ${result.images?.length || 0} images`);
       return result;
     } catch (error) {
-      console.error('Error creating post:', error);
+      this.logger.error('Error creating post:', error);
       throw new InternalServerErrorException(error.message);
     }
   }
@@ -82,12 +90,16 @@ export class PostController {
   // Query parameter enables fetching next set of posts from DB and S3
   @Get()
   async getPosts(
+    @Query('userId') userId: string,
     @Query('page') page: string = '1',
     @Query('username') username?: string
   ): Promise<PostResponse[]> {
     try {
+      if (!userId) {
+        throw new UnauthorizedException('User ID is required');
+      }
       const pageNumber = parseInt(page, 10);
-      return await this.postService.getPost(pageNumber, 50, username);
+      return await this.postService.getAllPosts(userId);
     } catch (error) {
       console.error('Error fetching posts:', error);
       throw error;
