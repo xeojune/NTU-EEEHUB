@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import { AddFriendButton, Card, ContentContainer, CoverImage, Description, Name, ProfileImage } from '../../styles/Friends/PeopleCardStyle';
 import { useUser } from '../../context/UserContext';
 import defaultAvatar from '../../assets/userImg/defaultAvatar.png';
@@ -21,6 +22,7 @@ const PeopleCard: React.FC<PeopleCardProps> = ({
   isFollowing,
   onFollowToggle,
 }) => {
+  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string>(profileImg || defaultAvatar);
   const [backgroundUrl, setBackgroundUrl] = useState<string>(backgroundImg || defaultBackground);
   const { getUserAvatar, getUserBackground } = useUser();
@@ -44,15 +46,26 @@ const PeopleCard: React.FC<PeopleCardProps> = ({
     loadImages();
   }, [username, getUserAvatar, getUserBackground]);
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent navigation if clicking the follow button
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    navigate(`/profile/${username}`);
+  };
+
   return (
-    <Card>
+    <Card onClick={handleCardClick}>
       <CoverImage url={backgroundUrl}>
         <ProfileImage url={avatarUrl} />
       </CoverImage>
       <ContentContainer>
         <Name>{username}</Name>
         <AddFriendButton 
-          onClick={() => onFollowToggle(userId)} 
+          onClick={(e) => {
+            e.stopPropagation();
+            onFollowToggle(userId);
+          }} 
           $isFollowing={isFollowing}
         >
           {!isFollowing && <span>+</span>}{isFollowing ? 'Following' : 'Follow'}

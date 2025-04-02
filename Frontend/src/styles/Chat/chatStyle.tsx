@@ -33,8 +33,7 @@ export const FriendsChatContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 50%;
-  border-bottom: 1px solid #eef2f7;
+  height: 100%;
   
   .chat-list {
     display: flex;

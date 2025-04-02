@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Document, Types } from 'mongoose';
 import { ChatMessage, ChatRoom } from './schemas/chat.schema';
 import { User } from '../auth/schemas/user.schema';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 interface PopulatedUser {
     _id: Types.ObjectId;
@@ -49,15 +50,13 @@ export class ChatService {
         // Sort participants to ensure consistent order for query
         const sortedParticipants = [...participants].sort();
         return await this.chatRoomModel.findOne({
-            participants: { $all: sortedParticipants },
-            isGroupChat: false
+            participants: { $all: sortedParticipants }
         }).exec();
     }
 
-    async createChatRoom(participants: string[], isGroup: boolean = false, groupName: string = '') {
+    async createChatRoom(participants: string[]) {
         try {
-            // For 1-on-1 chats, check if room already exists
-            if (!isGroup && participants.length === 2) {
+            if (participants.length === 2) {
                 const existingRoom = await this.findExistingChatRoom(participants);
                 if (existingRoom) {
                     return existingRoom;
@@ -66,8 +65,6 @@ export class ChatService {
 
             const chatRoom = new this.chatRoomModel({
                 participants,
-                isGroupChat: isGroup,
-                groupName,
             });
             return await chatRoom.save();
         } catch (error) {

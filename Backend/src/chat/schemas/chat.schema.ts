@@ -7,8 +7,8 @@ export class ChatMessage extends Document {
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     sender: User;
 
-    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-    receiver: User;
+    @Prop({ type: Types.ObjectId, ref: 'User' })
+    receiver?: User;
 
     @Prop({ required: true })
     content: string;
@@ -45,6 +45,9 @@ export class ChatRoom extends Document {
 
     @Prop({ type: Types.ObjectId, ref: 'User' })
     groupAdmin: User;
+
+    @Prop({ type: Types.ObjectId, ref: 'Group' })
+    groupId: Types.ObjectId;
 }
 
 export const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);

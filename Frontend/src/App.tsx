@@ -106,15 +106,19 @@ function App() {
               path="/" 
               element={
                 <ProtectedRoute>
-                  <Home />
+                  
+                    <Home />
+                  
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/:username" 
+              path="/profile/:username" 
               element={
                 <ProtectedRoute>
-                  <Profile />
+                  
+                    <Profile />
+                  
                 </ProtectedRoute>
               } 
             />
@@ -122,7 +126,9 @@ function App() {
               path="/chat" 
               element={
                 <ProtectedRoute>
-                  <ChatPage />
+                  
+                    <ChatPage />
+                  
                 </ProtectedRoute>
               } 
             />

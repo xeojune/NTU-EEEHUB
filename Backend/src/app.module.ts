@@ -9,6 +9,7 @@ import config from './config/config';
 import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
 import { ChatModule } from './chat/chat.module';
+import { OpenChatModule } from './chat/openChat/openChat.module';
 import { FriendsModule } from './friends/friends.module';
 import { GroupsModule } from './groups/groups.module';
 import { CommentsModule } from './comments/comments.module';
@@ -42,6 +43,7 @@ import { EventsModule } from './groups/events/events.module';
     UserModule,
     PostModule,
     ChatModule,
+    OpenChatModule,
     FriendsModule,
     GroupsModule,
     CommentsModule,

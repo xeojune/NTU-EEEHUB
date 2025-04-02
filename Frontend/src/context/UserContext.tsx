@@ -11,6 +11,7 @@ interface User {
   totalPoints: number;
   followerCount: number;
   followingCount: number;
+  ranking: string;
 }
 
 interface UserContextType {
@@ -65,14 +66,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const userData = await response.json();
       
       setUser({
-        _id: userId,
+        _id: userData._id,
         name: userData.name,
         email: userData.email,
         profileImg: userData.profileImg || defaultAvatar,
         backgroundImg: userData.backgroundImg || defaultBackground,
         totalPoints: userData.totalPoints || 0,
         followerCount: userData.followerCount || 0,
-        followingCount: userData.followingCount || 0
+        followingCount: userData.followingCount || 0,
+        ranking: userData.ranking || 'Beginner'
       });
 
       if (userData.profileImg) {
@@ -81,14 +83,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (userData.backgroundImg) {
         setBackgroundImage(userData.backgroundImg);
       }
-      if (userData.totalPoints !== undefined) {
+      if (userData.totalPoints) {
         setPoints(userData.totalPoints);
-      }
-      if (userData.followerCount !== undefined) {
-        setFollowerCount(userData.followerCount);
-      }
-      if (userData.followingCount !== undefined) {
-        setFollowingCount(userData.followingCount);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -168,7 +164,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     fetchUserProfile();
-  }, [fetchUserProfile]);
+  }, [points, fetchUserProfile]);
 
   return (
     <UserContext.Provider value={{

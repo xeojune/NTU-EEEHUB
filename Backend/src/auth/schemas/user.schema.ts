@@ -27,6 +27,9 @@ export class User extends Document {
 
     @Prop({default: 1000})
     totalPoints: number;
+
+    @Prop({default: 'Beginner'})
+    ranking: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

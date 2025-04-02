@@ -57,6 +57,15 @@ export const ProfileImage = styled.img`
     z-index: 2;
     transition: filter 0.3s;
 `
+export const RankFrame = styled.img`
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+`
 
 export const ProfileImageContainer = styled.div`
     position: absolute;
@@ -95,10 +104,80 @@ export const ProfileImageContainer = styled.div`
     }
 `
 
-
-
 export const HiddenFileInput = styled.input`
     display: none;
+`
+
+export const RankingBar = styled.div`
+    display: flex;
+    width: 150%;
+    margin-left: -25%;
+    height: 40px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    overflow: visible;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    bottom: 1rem;
+`
+
+export const RankingSection = styled.div<{ color: string; width: string; text: string; points: string; isCurrentRank: boolean }>`
+    position: relative;
+    background-color: ${props => props.color};
+    width: ${props => props.width};
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    gap: 4px;
+    transform: ${props => props.isCurrentRank ? 'scaleY(1.5)' : 'scaleY(1)'};
+    z-index: ${props => props.isCurrentRank ? 2 : 1};
+    box-shadow: ${props => props.isCurrentRank ? '0 0 10px rgba(255, 255, 255, 0.5)' : 'none'};
+    border: ${props => props.isCurrentRank ? '2px solid white' : 'none'};
+
+    .rank-icon {
+        font-size: ${props => props.isCurrentRank ? '22px' : '18px'};
+        transition: all 0.3s ease;
+        filter: ${props => props.isCurrentRank ? 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))' : 'none'};
+    }
+
+    &:hover {
+        transform: ${props => props.isCurrentRank ? 'scaleY(1.2)' : 'scaleY(1.1)'};
+    }
+
+    &:hover::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%) rotate(45deg);
+        width: 8px;
+        height: 8px;
+        background: rgba(0, 0, 0, 0.85);
+        top: -31px;
+        z-index: 100;
+    }
+
+    &:hover::after {
+        content: "${props => props.text} (${props => props.points})";
+        position: absolute;
+        top: -45px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 100;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
 `
 
 export const ProfileInfo = styled.div`
@@ -155,6 +234,7 @@ export const PostWrapper = styled.div`
         font-size: 1.2rem;
     }
 `
+
 export const PostOverlay = styled.div`
     position: absolute;
     bottom: 0;
@@ -218,5 +298,71 @@ export const PostGrid = styled.div`
             object-fit: cover;
             border-radius: 8px;
         }
+    }
+`
+
+export const StatsText = styled.p`
+    display: inline-block;
+    margin: 0 15px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    span {
+        font-weight: 600;
+        color: #333;
+        margin-left: 4px;
+    }
+`
+
+export const RankText = styled.p<{ rankColor: string }>`
+    display: inline-block;
+    margin: 10px 15px;
+    padding: 8px 16px;
+    border: 2px solid ${props => props.rankColor};
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+
+    .rank-icon {
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px ${props => props.rankColor}50;
+    }
+`
+
+
+
+export const PointsText = styled.p<{ rankColor: string }>`
+    display: inline-block;
+    margin: 10px 15px;
+    padding: 8px 16px;
+    background: ${props => props.rankColor};
+    border-radius: 20px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    .points-icon {
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px ${props => props.rankColor}50;
     }
 `

@@ -323,6 +323,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return undefined;
     }
 
+    private getUserIdFromSocket(client: Socket): string | undefined {
+        const connection = this.getUserBySocketId(client.id);
+        return connection?.userId;
+    }
+
     private broadcastOnlineUsers() {
         const onlineUsers = Array.from(this.userSocketMap.values());
         this.server.emit('online_users', onlineUsers);
