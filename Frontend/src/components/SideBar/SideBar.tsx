@@ -55,7 +55,7 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
   return (
     <SideBarContainer>
       {/* User Information */}
-      <SideBarLink to={`/${username}`}>
+      <SideBarLink to={`/profile/${username}`}>
         <SideBarItem>
           <UserInfo>
             <ProfilePicture src={profileImage || '/default-avatar.png'} alt="Profile" />

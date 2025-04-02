@@ -12,7 +12,6 @@ import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class AuthService {
     constructor(
-        //UserModel, RefreshTokenModel -> 소문자 사용 
         @InjectModel(User.name) private UserModel: Model<User>,
         @InjectModel(RefreshToken.name) private RefreshTokenModel: Model<RefreshToken>,
         private jwtService: JwtService,

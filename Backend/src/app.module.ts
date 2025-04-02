@@ -9,6 +9,13 @@ import config from './config/config';
 import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
 import { ChatModule } from './chat/chat.module';
+import { OpenChatModule } from './chat/openChat/openChat.module';
+import { FriendsModule } from './friends/friends.module';
+import { GroupsModule } from './groups/groups.module';
+import { CommentsModule } from './comments/comments.module';
+import { LikesModule } from './likes/likes.module';
+import { AdminModule } from './admin/admin.module';
+import { EventsModule } from './groups/events/events.module';
 
 @Module({
   imports: [
@@ -36,6 +43,13 @@ import { ChatModule } from './chat/chat.module';
     UserModule,
     PostModule,
     ChatModule,
+    OpenChatModule,
+    FriendsModule,
+    GroupsModule,
+    CommentsModule,
+    LikesModule,
+    AdminModule,
+    EventsModule
   ],
   controllers: [AppController],
   providers: [AppService],

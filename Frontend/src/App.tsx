@@ -4,12 +4,18 @@ import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-route
 import Home from './pages/Home/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import AdminLogin from './pages/Admin/adminLoginPage';
+import AdminRegister from './pages/Admin/adminRegisterPage';
+import AdminDashboard from './pages/Admin/adminPage';
 import Profile from './pages/Profile/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/Admin/AdminRoute';
 import ChatPage from './pages/Chat/ChatPage';
 import FriendsPage from './pages/Friends/FriendsPage';
 import { UserProvider } from './context/UserContext';
 import styled from 'styled-components';
+import { GroupListPage } from './pages/Groups/GroupListPage';
+import GroupPage from './pages/Groups/GroupPage';
 
 const MainContainer = styled.div`
   min-height: 100vh;
@@ -67,20 +73,52 @@ function App() {
               } 
             />
 
+            {/* Admin Routes */}
+            <Route 
+              path="/admin/login" 
+              element={
+                <PageTransition>
+                  <AdminLogin />
+                </PageTransition>
+              } 
+            />
+            <Route 
+              path="/admin/register" 
+              element={
+                <PageTransition>
+                  <AdminRegister />
+                </PageTransition>
+              } 
+            />
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <AdminRoute>
+                  <PageTransition>
+                    <AdminDashboard />
+                  </PageTransition>
+                </AdminRoute>
+              } 
+            />
+
             {/* Protected Routes */}
             <Route 
               path="/" 
               element={
                 <ProtectedRoute>
-                  <Home />
+                  
+                    <Home />
+                  
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/:username" 
+              path="/profile/:username" 
               element={
                 <ProtectedRoute>
-                  <Profile />
+                  
+                    <Profile />
+                  
                 </ProtectedRoute>
               } 
             />
@@ -88,7 +126,9 @@ function App() {
               path="/chat" 
               element={
                 <ProtectedRoute>
-                  <ChatPage />
+                  
+                    <ChatPage />
+                  
                 </ProtectedRoute>
               } 
             />
@@ -100,6 +140,22 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/groups" 
+              element={
+                <ProtectedRoute>
+                  <GroupListPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/groups/:groupId" 
+              element={
+                <ProtectedRoute>
+                  <GroupPage />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
         </AnimatePresence>
       </MainContainer>
@@ -107,12 +163,12 @@ function App() {
   );
 }
 
-const AppWrapper = () => {
+function AppWrapper() {
   return (
     <Router>
       <App />
     </Router>
   );
-};
+}
 
 export default AppWrapper;

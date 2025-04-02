@@ -33,8 +33,7 @@ export const FriendsChatContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 50%;
-  border-bottom: 1px solid #eef2f7;
+  height: 100%;
   
   .chat-list {
     display: flex;
@@ -253,12 +252,21 @@ export const ActionButtons = styled.div`
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px;
+    padding: 12px;
     border-radius: 50%;
     color: #0066FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
     
     &:hover {
-      background-color: #f5f7fb;
+      background-color: rgba(0, 102, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 `
@@ -384,7 +392,7 @@ export const ChatInput = styled.div`
       border: none;
       background: none;
       outline: none;
-      padding: 8px 0;
+      padding: 12px 0;
       font-size: 15px;
       
       &::placeholder {
@@ -396,12 +404,33 @@ export const ChatInput = styled.div`
       background: none;
       border: none;
       cursor: pointer;
-      padding: 8px;
+      padding: 10px;
       color: #0066FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
       
       &:hover {
-        opacity: 0.8;
+        background-color: rgba(0, 102, 255, 0.1);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
       }
     }
   }
 `
+
+export const NoChatSelected = styled.div`
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;

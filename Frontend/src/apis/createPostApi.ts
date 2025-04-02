@@ -77,12 +77,19 @@ export const useCreatePostMutation = ({ onSuccess, onError }: UseCreatePostMutat
       // Invalidate and refetch posts query to refresh the feed
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       
+      // Invalidate user points since they've been deducted
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['userPoints', userId] });
+        queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
+      }
+      
       // Call the custom onSuccess callback if provided
       onSuccess?.();
     },
     onError: (error: Error) => {
       // Show error message
-      toast.error('Failed to create post');
+      toast.error(error.message || 'Failed to create post');
       
       // Call the custom onError callback if provided
       onError?.();

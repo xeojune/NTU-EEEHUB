@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
 import { User } from '../auth/schemas/user.schema';
@@ -85,7 +85,37 @@ export class UserService {
   
 
   //update user points
-  async updatePoints(userId: String, pointsToDeduct: number, session?: ClientSession): Promise<number> {
+  async updatePoints(userId: String, pointsToAdd: number, session?: ClientSession): Promise<number> {
+    const updateOperation = { $inc: { totalPoints: pointsToAdd } };
+    const options = { new: true }; // Return the updated document
+    
+    let user;
+    if (session) {
+      user = await this.userModel.findByIdAndUpdate(
+        userId,
+        updateOperation,
+        { ...options, session }
+      );
+    } else {
+      user = await this.userModel.findByIdAndUpdate(
+        userId,
+        updateOperation,
+        options
+      );
+    }
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Update the user's ranking based on new total points
+    await this.updateUserRanking(userId.toString());
+
+    return user.totalPoints;
+  }
+
+  // Deduct points from user
+  async deductPoints(userId: string, points: number, session?: ClientSession): Promise<number> {
     let query = this.userModel.findById(userId);
     if(session) { 
       query = query.session(session);
@@ -95,22 +125,74 @@ export class UserService {
     if (!user) {
       throw new Error('User not found');
     }
-    
-    if (user.totalPoints < pointsToDeduct) {
+
+    // Check if user has enough points
+    if (user.totalPoints < points) {
       throw new Error('Insufficient points');
     }
-    user.totalPoints -= pointsToDeduct;
+
+    // Deduct points
+    user.totalPoints -= points;
     await user.save(session ? { session } : {});
     return user.totalPoints;
   }
 
-  async getUserProfile(userId: string): Promise<Partial<User>> {
-    const user = await this.userModel.findById(userId)
-      .select('name email profileImg backgroundImg totalPoints')
-      .exec();
-    
+  // Add points to user
+  async addPoints(userId: string, points: number, session?: ClientSession): Promise<number> {
+    let query = this.userModel.findById(userId);
+    if(session) { 
+      query = query.session(session);
+    }
+    const user = await query.exec();
+
     if (!user) {
       throw new Error('User not found');
+    }
+
+    // Add points
+    user.totalPoints += points;
+    await user.save(session ? { session } : {});
+    return user.totalPoints;
+  }
+
+  private determineRanking(points: number): string {
+    if (points >= 5000001) return 'Absolute God';
+    if (points >= 4000000) return 'Guardian God';
+    if (points >= 3000000) return 'Space God';
+    if (points >= 2000000) return 'Sun God';
+    if (points >= 1000000) return 'Moon God';
+    if (points >= 600001) return 'Fire God';
+    if (points >= 400000) return 'Wind God';
+    if (points >= 200000) return 'Plant God';
+    if (points >= 100001) return 'Superhuman';
+    if (points >= 90000) return 'Supreme';
+    if (points >= 75000) return 'Hero';
+    if (points >= 50000) return 'Advanced';
+    if (points >= 10000) return 'Intermediate';
+    if (points >= 5000) return 'Novice';
+    if (points >= 1501) return 'Civilian';
+    return 'Beginner';
+  }
+
+  async updateUserRanking(userId: string): Promise<void> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
+    
+    const newRanking = this.determineRanking(user.totalPoints);
+    if (user.ranking !== newRanking) {
+        await this.userModel.findByIdAndUpdate(userId, { ranking: newRanking });
+    }
+  }
+
+  async getUserProfile(userId: string): Promise<Partial<User>> {
+    const user = await this.userModel.findById(userId)
+      .select('name email profileImg backgroundImg totalPoints ranking followerCount followingCount')
+      .exec();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
     // Generate signed URLs for profile and background images if they exist

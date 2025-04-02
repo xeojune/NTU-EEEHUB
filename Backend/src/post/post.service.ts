@@ -2,11 +2,15 @@ import { Injectable, BadRequestException, Logger, InternalServerErrorException }
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Post, PostDocument } from './schemas/post.schema';
+import { Comment, CommentDocument } from '../comments/schemas/comments.schema';
+import { Like, LikeDocument } from '../likes/schemas/likes.schema';
+import { Friends, FriendsDocument } from '../friends/schemas/friends.schema';
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { uuidv7 } from 'uuidv7';
 import * as dotenv from 'dotenv';
 import { UserService } from '../user/user.service';
+import { Types } from 'mongoose';
 
 dotenv.config();
 
@@ -22,7 +26,10 @@ export class PostService {
 
   constructor(
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+    @InjectModel(Like.name) private likeModel: Model<LikeDocument>,
     private readonly userService: UserService,
+    @InjectModel(Friends.name) private friendsModel: Model<FriendsDocument>,
   ) {
     this.s3Client = new S3Client({
       region: process.env.BUCKET_REGION,
@@ -75,19 +82,20 @@ export class PostService {
         throw new BadRequestException('Need at least 100 points for post creation');
       }
 
-      // Deduct points from user first
-      await this.userService.updatePoints(userId, points);
+      // Deduct points from user's total points
+      await this.userService.deductPoints(userId, points);
 
       try {
         // Upload all images to S3
         const imageKeys = await this.uploadToS3(files);
 
-        // Create new post with multiple images
+        // Create new post with multiple images and set initial points
         const newPost = new this.postModel({
           username,
           caption,
           images: imageKeys,
-          points,
+          points, // This is the total points allocated for distribution
+          remainingPoints: points, // Track remaining points separately
           totalLikes: 0,
           totalComments: 0,
           userId // Add userId to track post ownership
@@ -97,7 +105,7 @@ export class PostService {
         return post;
       } catch (error) {
         // If there's an error after points deduction, refund the points
-        await this.userService.updatePoints(userId, -points); // Refund points
+        await this.userService.addPoints(userId, points);
         throw error;
       }
     } catch (error) {
@@ -174,6 +182,55 @@ export class PostService {
     }
   }
 
+  async getAllPosts(userId: string): Promise<PostWithUrl[]> {
+    try {
+      // Find all users that the current user follows
+      const following = await this.friendsModel
+        .find({ follower: new Types.ObjectId(userId) })
+        .select('following')
+        .lean();
+      
+      // Extract the following IDs
+      const followingIds = following.map(f => f.following);
+      
+      // Find posts from users that the current user follows and their own posts
+      const posts = await this.postModel
+        .find({
+          $or: [
+            { userId: { $in: followingIds } },  // Posts from followed users
+            { userId: userId }                  // User's own posts
+          ]
+        })
+        .sort({ createdAt: -1 })
+        .exec();
+
+      // Generate signed URLs for each post's images
+      const postsWithUrls = await Promise.all(
+        posts.map(async (post) => {
+          const imageUrls = await Promise.all(
+            post.images.map(async (key) => {
+              const command = new GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: key,
+              });
+              return await getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
+            })
+          );
+
+          return {
+            ...post.toObject(),
+            imageUrls,
+          };
+        })
+      );
+
+      return postsWithUrls;
+    } catch (error) {
+      this.logger.error('Error in getAllPosts:', error);
+      throw new InternalServerErrorException('Failed to fetch posts');
+    }
+  }
+
   async deletePost(id: string, username: string): Promise<void> {
     const post = await this.postModel.findById(id).exec();
     if (!post) {
@@ -194,6 +251,12 @@ export class PostService {
       });
 
       await Promise.all(deletePromises);
+
+      // Delete all comments associated with the post
+      await this.commentModel.deleteMany({ postId: id });
+
+      // Delete all likes associated with the post
+      await this.likeModel.deleteMany({ postId: id });
 
       // Delete post from database
       const result = await this.postModel.deleteOne({ _id: id });

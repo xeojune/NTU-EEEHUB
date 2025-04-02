@@ -1,4 +1,5 @@
 import authApiInstance from './authApiInstance';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface UserProfile {
   name: string;
@@ -56,4 +57,26 @@ export const getUserPoints = async (userId: string): Promise<number> => {
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to fetch user points');
   }
+};
+
+export const useGetUserPoints = (userId: string) => {
+  return useQuery<number, Error>({
+    queryKey: ['userPoints', userId],
+    queryFn: () => getUserPoints(userId),
+    enabled: !!userId,
+  });
+};
+
+export const useUserPointsMutation = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: getUserPoints,
+    onSuccess: (_, userId) => {
+      // Invalidate and refetch user points
+      queryClient.invalidateQueries({ queryKey: ['userPoints', userId] });
+      // Also invalidate user profile as it contains total points
+      queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
+    },
+  });
 };
