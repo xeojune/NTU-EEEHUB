@@ -2,7 +2,7 @@ import styled from "styled-components"
 import { Link } from "react-router"
 import { IoIosSearch } from "react-icons/io";
 import { TiHome } from "react-icons/ti";
-import { FaUserFriends } from "react-icons/fa";
+import { FaUserFriends, FaUsers } from "react-icons/fa";
 import { MdOndemandVideo } from "react-icons/md";
 import { IoChatboxEllipses } from "react-icons/io5";
 
@@ -105,21 +105,19 @@ export const HomeIcon = styled(TiHome)<{ color?: string }>`
 `
 
 export const FriendsIcon = styled(FaUserFriends)<{ color?: string }>`
-  color: ${(props) => props.color || 'white'};
-  width: 30px;
-  height: 30px;
+    font-size: 30px;
+    color: ${props => props.color || 'white'};
 `
 
-export const WatchIcon = styled(MdOndemandVideo)<{ color?: string }>`
-  color: ${(props) => props.color || 'white'};
-  width: 30px;
-  height: 30px;
+export const GroupIcon = styled(FaUsers)<{ color?: string }>`
+    font-size: 30px;
+    color: ${props => props.color || 'white'};
 `
 
 export const ChatIcon = styled(IoChatboxEllipses)<{ color?: string }>`
-  color: ${(props) => props.color || 'white'};
-  width: 30px;
-  height: 30px;
+    color: ${(props) => props.color || 'white'};
+    width: 30px;
+    height: 30px;
 `
 
 

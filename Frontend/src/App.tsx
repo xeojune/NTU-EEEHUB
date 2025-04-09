@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Home from './pages/Home/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -16,6 +18,7 @@ import { UserProvider } from './context/UserContext';
 import styled from 'styled-components';
 import { GroupListPage } from './pages/Groups/GroupListPage';
 import GroupPage from './pages/Groups/GroupPage';
+import NotificationPage from './pages/Notification/NotificationPage';
 
 const MainContainer = styled.div`
   min-height: 100vh;
@@ -51,115 +54,109 @@ function App() {
   const location = useLocation();
 
   return (
-    <UserProvider>
-      <MainContainer>
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            {/* Public Routes */}
-            <Route 
-              path="/login" 
-              element={
-                <PageTransition>
+    <AnimatePresence mode='wait'>
+      <PageTransition key={location.pathname}>
+        <UserProvider>
+          <MainContainer>
+            <Routes location={location}>
+              {/* Public Routes */}
+              <Route 
+                path="/login" 
+                element={
                   <Login />
-                </PageTransition>
-              } 
-            />
-            <Route 
-              path="/register" 
-              element={
-                <PageTransition>
+                } 
+              />
+              <Route 
+                path="/register" 
+                element={
                   <Register />
-                </PageTransition>
-              } 
-            />
+                } 
+              />
 
-            {/* Admin Routes */}
-            <Route 
-              path="/admin/login" 
-              element={
-                <PageTransition>
+              {/* Admin Routes */}
+              <Route 
+                path="/admin/login" 
+                element={
                   <AdminLogin />
-                </PageTransition>
-              } 
-            />
-            <Route 
-              path="/admin/register" 
-              element={
-                <PageTransition>
+                } 
+              />
+              <Route 
+                path="/admin/register" 
+                element={
                   <AdminRegister />
-                </PageTransition>
-              } 
-            />
-            <Route 
-              path="/admin/dashboard" 
-              element={
-                <AdminRoute>
-                  <PageTransition>
+                } 
+              />
+              <Route 
+                path="/admin/dashboard" 
+                element={
+                  <AdminRoute>
                     <AdminDashboard />
-                  </PageTransition>
-                </AdminRoute>
-              } 
-            />
+                  </AdminRoute>
+                } 
+              />
 
-            {/* Protected Routes */}
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  
+              {/* Protected Routes */}
+              <Route 
+                path="/" 
+                element={
+                  <ProtectedRoute>
                     <Home />
-                  
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile/:username" 
-              element={
-                <ProtectedRoute>
-                  
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile/:username" 
+                element={
+                  <ProtectedRoute>
                     <Profile />
-                  
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/chat" 
-              element={
-                <ProtectedRoute>
-                  
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/chat" 
+                element={
+                  <ProtectedRoute>
                     <ChatPage />
-                  
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/friends" 
-              element={
-                <ProtectedRoute>
-                  <FriendsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/groups" 
-              element={
-                <ProtectedRoute>
-                  <GroupListPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/groups/:groupId" 
-              element={
-                <ProtectedRoute>
-                  <GroupPage />
-                </ProtectedRoute>
-              } 
-            />
-          </Routes>
-        </AnimatePresence>
-      </MainContainer>
-    </UserProvider>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/friends" 
+                element={
+                  <ProtectedRoute>
+                    <FriendsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/groups" 
+                element={
+                  <ProtectedRoute>
+                    <GroupListPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/groups/:groupId" 
+                element={
+                  <ProtectedRoute>
+                    <GroupPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/notifications" 
+                element={
+                  <ProtectedRoute>
+                    <NotificationPage />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </MainContainer>
+        </UserProvider>
+      </PageTransition>
+    </AnimatePresence>
   );
 }
 
@@ -167,6 +164,17 @@ function AppWrapper() {
   return (
     <Router>
       <App />
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </Router>
   );
 }

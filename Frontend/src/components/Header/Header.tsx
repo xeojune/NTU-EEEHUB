@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ChatIcon, FriendsIcon, HeaderContainer, HeaderLeft, HeaderLogo, HeaderMiddle, HeaderRight, HomeIcon, Logo, LogoWrap, MiddleLogo, SearchIcon, SearchInput, SearchWrap, WatchIcon } from '../../styles/Header/HeaderStyle'
+import { ChatIcon, FriendsIcon, GroupIcon, HeaderContainer, HeaderLeft, HeaderLogo, HeaderMiddle, HeaderRight, HomeIcon, Logo, LogoWrap, MiddleLogo, SearchIcon, SearchInput, SearchWrap } from '../../styles/Header/HeaderStyle'
 import { useLocation, useNavigate } from 'react-router';
 
 const Header: React.FC = () => {
@@ -11,7 +11,7 @@ const Header: React.FC = () => {
     const pathToLogo: { [key: string]: string } = {
       '/': 'home',
       '/friends': 'friends',
-      '/watch': 'watch',
+      '/groups': 'groups',
       '/chat': 'chat',
     };
 
@@ -56,9 +56,9 @@ const Header: React.FC = () => {
             <MiddleLogo
                 to='/groups'
                 onClick={() => handleLogoClick('groups', '/groups')}
-                isActive={activeLogo === 'watch'}
+                isActive={activeLogo === 'groups'}
             >
-                <WatchIcon color={activeLogo === 'watch' ? 'red' : 'white'} />
+                <GroupIcon color={activeLogo === 'groups' ? 'red' : 'white'} />
             </MiddleLogo>
             <MiddleLogo
                 to='/chat'

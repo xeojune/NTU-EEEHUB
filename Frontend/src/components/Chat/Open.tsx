@@ -37,6 +37,15 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
 
     if (!socket) return;
 
+    // Auto-rejoin last room if exists
+    const lastJoinedRoom = localStorage.getItem('lastJoinedRoom');
+    if (lastJoinedRoom) {
+      const room = rooms.find(r => r._id === lastJoinedRoom);
+      if (room) {
+        handleJoinRoom(room);
+      }
+    }
+
     // Listen for room events
     socket.on('roomCreated', (room: Room) => {
       console.log('Room created event received:', room);
@@ -122,22 +131,18 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
     }
   };
 
-  const handleJoinRoom = (room: Room) => {
-    if (!socket || !currentUserId) {
-      console.error('Cannot join room: missing socket connection or user ID');
-      return;
-    }
-    
-    socket.emit('joinOpenRoom', {
-      roomId: room._id,
-      userId: currentUserId
-    }, (response: Room) => {
+  const handleJoinRoom = async (room: Room) => {
+    if (!socket || !currentUserId) return;
+
+    socket.emit('joinOpenRoom', { roomId: room._id, userId: currentUserId }, (response: Room) => {
       console.log('Join room response:', response);
       if (response) {
         setRooms(prev => prev.map(r => 
           r._id === response._id ? response : r
         ));
         onRoomSelect(response);
+        // Store joined room in localStorage
+        localStorage.setItem('lastJoinedRoom', room._id);
       }
     });
   };

@@ -57,6 +57,7 @@ export const ProfileImage = styled.img`
     z-index: 2;
     transition: filter 0.3s;
 `
+
 export const RankFrame = styled.img`
     position: absolute;
     width: 300px;
@@ -344,8 +345,6 @@ export const RankText = styled.p<{ rankColor: string }>`
     }
 `
 
-
-
 export const PointsText = styled.p<{ rankColor: string }>`
     display: inline-block;
     margin: 10px 15px;
@@ -366,3 +365,54 @@ export const PointsText = styled.p<{ rankColor: string }>`
         box-shadow: 0 4px 12px ${props => props.rankColor}50;
     }
 `
+
+export const DetailContainer = styled.div`
+    margin: 20px 0;
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    
+    textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        resize: vertical;
+        background-color: #f8f9fa;
+        
+        &:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+    }
+`;
+
+export const DetailText = styled.p`
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    margin: 0;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    min-height: 80px;
+`;
+
+export const EditButton = styled.button`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: transparent;
+    border: none;
+    color: #0066cc;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    
+    &:hover {
+        background-color: rgba(0, 102, 204, 0.1);
+    }
+`;

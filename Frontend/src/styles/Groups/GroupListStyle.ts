@@ -53,9 +53,8 @@ export const GroupCard = styled.div`
   }
 `;
 
-export const GroupImage = styled.div<{ backgroundImage?: string }>`
+export const GroupImage = styled.img`
   height: 150px;
-  background-image: url(${props => props.backgroundImage || '/default-group-banner.jpg'});
   background-size: cover;
   background-position: center;
   border-radius: 4px;

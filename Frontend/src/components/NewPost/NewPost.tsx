@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import ModalCard from '../ModalCard';
 import {
   NewPostContainer,
@@ -30,6 +31,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import AddImageButton from './AddImageButton';
 import NextImageButton from './NextImageButton';
 import ImageDots from '../ImageDots'
+import { notificationApi, NotificationType } from '../../apis/notificationApi';
+import { friendsApi } from '../../apis/friendsApi';
 
 interface NewPostProps {
   onClose: () => void; // Function to close the modal
@@ -61,9 +64,23 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
 
   const createPostMutation = useCreatePostMutation({
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      if (onPostCreated) {
+        onPostCreated();
+      }
       onClose();
-      onPostCreated?.();
-    }
+    },
+    onError: () => {
+      toast.error('Failed to create post. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      console.error('Error creating post');
+    },
   });
 
   // Function to get image dimensions
@@ -322,33 +339,74 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
       );
 
       console.log(`Submitting ${files.length} files for upload`);
-      createPostMutation.mutate({
+      
+      // Get current user's ID and followers
+      const currentUserId = localStorage.getItem('userId');
+      if (!currentUserId) {
+        throw new Error('No user ID found');
+      }
+
+      // Create the post
+      await createPostMutation.mutateAsync({
         files,
         caption,
         points,
         username: currentUsername || 'anonymous'
       });
-    } catch (error) {
-      console.error('Error preparing images:', error);
-      alert('Error preparing images for upload');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
-  const handleShare = async () => {
-    try {
-      // Your existing share logic here
-      await handleSubmit();
-      // After successful post creation
-      await invalidatePostsCache(queryClient);
+      // Get followers to notify
+      try {
+        const followersResponse = await friendsApi.getFollowers(currentUserId);
+        if (followersResponse && followersResponse.data && followersResponse.data.followers) {
+          const followerIds = followersResponse.data.followers.map(follower => follower.userId);
+          
+          // Create notification for followers
+          if (followerIds.length > 0) {
+            await notificationApi.createNotification({
+              recipientId: followerIds,  // Send to all followers
+              senderId: currentUserId,
+              type: NotificationType.NEW_POST,
+              content: 'has uploaded a new post',
+              entityType: 'Post'
+            });
+          }
+        }
+      } catch (notifError) {
+        console.error('Error creating post notification:', notifError);
+        // Don't throw here as the post was created successfully
+      }
+
+      toast.success('Post created successfully! 🎉', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
       if (onPostCreated) {
         onPostCreated();
       }
       onClose();
     } catch (error) {
       console.error('Error creating post:', error);
+      toast.error('Failed to create post. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handleShare = async () => {
+    await handleSubmit();
+    await invalidatePostsCache(queryClient);
   };
 
   return (

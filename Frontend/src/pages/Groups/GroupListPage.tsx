@@ -30,11 +30,12 @@ import {
 } from '../../styles/Groups/GroupListStyle';
 import Layout from '../Layout';
 import { useUser } from '../../context/UserContext';
+import defaultGroupImage from '../../assets/userImg/default-group-icon.png';
 
 export const GroupListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUser();
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [groups, setGroups] = useState<(Group & { signedIconUrl?: string })[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [handleError, setHandleError] = useState<string>('');
@@ -59,8 +60,31 @@ export const GroupListPage: React.FC = () => {
     try {
       setIsLoading(true);
       const fetchedGroups = await groupApi.getAllGroups();
-      setGroups(fetchedGroups);
+      console.log('Fetched groups:', fetchedGroups);
+      
+      // Get signed URLs for all group icons
+      const groupsWithSignedUrls = await Promise.all(
+        fetchedGroups.map(async (group) => {
+          console.log('Processing group:', group.name, 'Icon:', group.icon);
+          if (group.icon) {
+            try {
+              const signedIconUrl = await groupApi.getGroupIconUrl(group.id);
+              console.log('Got signed URL for group:', group.name, signedIconUrl);
+              return { ...group, signedIconUrl };
+            } catch (error) {
+              console.error(`Failed to get signed URL for group ${group.id}:`, error);
+              // Return the group with the icon as fallback
+              return { ...group, signedIconUrl: group.icon };
+            }
+          }
+          return { ...group, signedIconUrl: defaultGroupImage };
+        })
+      );
+      
+      console.log('Groups with signed URLs:', groupsWithSignedUrls);
+      setGroups(groupsWithSignedUrls);
     } catch (error) {
+      console.error('Failed to fetch groups:', error);
       toast.error('Failed to fetch groups');
     } finally {
       setIsLoading(false);
@@ -151,7 +175,13 @@ export const GroupListPage: React.FC = () => {
       <GroupList>
         {groups.map((group) => (
           <GroupCard key={group.id} onClick={() => navigate(`/groups/${group.id}`)}>
-            <GroupImage backgroundImage={group.backgroundImage} />
+            {/* <GroupImage 
+              src={group.signedIconUrl || group.icon || defaultGroupImage} 
+              onError={(e) => {
+                console.error('Failed to load image:', group.signedIconUrl);
+                e.currentTarget.src = defaultGroupImage;
+              }}
+            /> */}
             <GroupName>{group.name}</GroupName>
             <GroupDescription>{group.description}</GroupDescription>
             <MemberCount>{group.memberCount} members</MemberCount>

@@ -1,7 +1,19 @@
-import { Controller, Post, Body, Param, Put, Get, ValidationPipe } from '@nestjs/common';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  Param, 
+  Put, 
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ValidationPipe 
+} from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dtos/createGroup.dto';
 import { JoinGroupDto, RespondToJoinRequestDto, KickMemberDto, SetAdminDto } from './dtos/manageMember.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Types } from 'mongoose';
 
 @Controller('groups')
@@ -14,8 +26,8 @@ export class GroupsController {
   }
 
   @Get(':id')
-  async getGroupById(@Param('id') id: string) {
-    return this.groupsService.findById(new Types.ObjectId(id));
+  async getGroup(@Param('id') id: string) {
+    return this.groupsService.getGroupWithSignedUrls(id);
   }
 
   @Post()
@@ -70,5 +82,23 @@ export class GroupsController {
       setAdminDto,
       new Types.ObjectId(setAdminDto.creatorId)
     );
+  }
+
+  @Post(':id/icon')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadIcon(
+    @Param('id') groupId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<string> {
+    return this.groupsService.uploadIcon(groupId, file);
+  }
+
+  @Post(':id/background')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadBackgroundImage(
+    @Param('id') groupId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<string> {
+    return this.groupsService.uploadBackgroundImage(groupId, file);
   }
 }

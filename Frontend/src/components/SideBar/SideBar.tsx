@@ -16,6 +16,7 @@ import { Link, useNavigate } from 'react-router'
 import { getUserById } from '../../apis/getUserApi'
 import NewPost from '../NewPost/NewPost'
 import { useUser } from '../../context/UserContext'
+import { notificationApi } from '../../apis/notificationApi'
 
 interface SideBarProps {
   refreshFeed?: () => void;
@@ -24,6 +25,7 @@ interface SideBarProps {
 const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false); // Toggle dropdown
   const [showCreate, setShowCreate] = useState<boolean>(false); // Toggle modal
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const navigate = useNavigate();
   const [username, setUsername] = useState<string | null>(null);
   const { profileImage } = useUser();
@@ -47,6 +49,25 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
     fetchUsername();
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          const count = await notificationApi.getUnreadCount(userId);
+          setUnreadCount(count);
+        }
+      } catch (error) {
+        console.error('Error fetching unread notifications:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    // Set up an interval to fetch unread count every minute
+    const interval = setInterval(fetchUnreadCount, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const openCreateModal = () => setShowCreate(true);
   const closeCreateModal = () => setShowCreate(false);
@@ -70,15 +91,33 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
           <AiFillHome size={24} /> Home
         </SideBarItem>
       </SideBarLink>
-      <SideBarItem>
+      {/* <SideBarItem>
         <AiOutlineCompass size={24} /> Explore
-      </SideBarItem>
-      <SideBarItem>
-        <AiOutlineMessage size={24} /> Messages
-      </SideBarItem>
-      <SideBarItem>
-        <AiOutlineBell size={24} /> Notifications
-      </SideBarItem>
+      </SideBarItem> */}
+      <SideBarLink to="/chat">
+        <SideBarItem>
+          <AiOutlineMessage size={24} /> Messages
+        </SideBarItem>
+      </SideBarLink>
+      <SideBarLink to="/notifications">
+        <SideBarItem>
+          <AiOutlineBell size={24} /> 
+          Notifications
+          {unreadCount > 0 && (
+            <span style={{
+              backgroundColor: '#FF3B30',
+              color: 'white',
+              borderRadius: '50%',
+              padding: '2px 6px',
+              fontSize: '12px',
+              marginLeft: '5px'
+            }}>
+              {unreadCount}
+            </span>
+          )}
+        </SideBarItem>
+      </SideBarLink>
+      
       <SideBarItem onClick={openCreateModal}>
         <AiOutlinePlusCircle size={24} /> Create
       </SideBarItem>

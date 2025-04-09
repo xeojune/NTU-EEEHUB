@@ -8,6 +8,10 @@ export const useOpenSocket = () => {
     const newSocket = io('http://localhost:3000/socket', {
       autoConnect: true,
       transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000
     });
 
     newSocket.on('connect', () => {
@@ -20,6 +24,10 @@ export const useOpenSocket = () => {
 
     newSocket.on('disconnect', () => {
       console.log('OpenChat socket disconnected');
+    });
+
+    newSocket.on('reconnect', (attemptNumber: number) => {
+      console.log('OpenChat socket reconnected after', attemptNumber, 'attempts');
     });
 
     setSocket(newSocket);

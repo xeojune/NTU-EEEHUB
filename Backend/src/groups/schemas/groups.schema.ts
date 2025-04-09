@@ -27,10 +27,10 @@ export class Group {
   description: string;
 
   @Prop()
-  backgroundImage: string;
+  icon: string;
 
   @Prop()
-  icon: string;
+  backgroundImage: string;
 
   @Prop()
   email: string;

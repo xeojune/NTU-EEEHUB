@@ -5,6 +5,8 @@ import PeopleCard from '../../components/Friends/PeopleCard';
 import { CardsContainer, FriendsPageContainer, MoreButton, Section, SectionTitle, SectionContainer } from '../../styles/Friends/FriendsPageStyle';
 import { friendsApi, User as Person } from '../../apis/friendsApi';
 import { useUser } from '../../context/UserContext';
+import { toast } from 'react-toastify';
+import { notificationApi, NotificationType } from '../../apis/notificationApi';
 
 interface PaginationState {
     page: number;
@@ -164,7 +166,22 @@ const FriendsPage: React.FC = () => {
                 // Unfollow user
                 const response = await friendsApi.unfollowUser(userId);
                 if (response.success) {
-                    console.log('Successfully unfollowed user');
+                    // Create notification in database
+                    await notificationApi.createNotification({
+                        recipientId: userId,
+                        senderId: currentUserId,
+                        type: NotificationType.FOLLOW,
+                        content: 'unfollowed you'
+                    });
+
+                    toast.success('Successfully unfollowed user', {
+                        position: 'top-right',
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
                     
                     // Update local state first
                     setFollowingIds(prev => {
@@ -197,7 +214,22 @@ const FriendsPage: React.FC = () => {
                 // Follow user
                 const response = await friendsApi.followUser(userId);
                 if (response.success && response.data) {
-                    console.log('Successfully followed user');
+                    // Create notification in database with single recipient
+                    await notificationApi.createNotification({
+                        recipientId: userId, // Single recipient
+                        senderId: currentUserId,
+                        type: NotificationType.FOLLOW,
+                        content: `started following you`
+                    });
+
+                    toast.success('Successfully followed user', {
+                        position: 'top-right',
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
                     
                     // Update local state first
                     setFollowingIds(prev => {
@@ -234,6 +266,14 @@ const FriendsPage: React.FC = () => {
             }
         } catch (error) {
             console.error('Error toggling follow status:', error);
+            toast.error('Failed to update follow status. Please try again.', {
+                position: 'top-right',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
             // On error, refresh all lists to ensure correct state
             await Promise.all([
                 fetchFollowing(1),

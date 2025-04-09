@@ -16,6 +16,7 @@ import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
 import { AdminModule } from './admin/admin.module';
 import { EventsModule } from './groups/events/events.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -49,7 +50,8 @@ import { EventsModule } from './groups/events/events.module';
     CommentsModule,
     LikesModule,
     AdminModule,
-    EventsModule
+    EventsModule,
+    NotificationsModule
   ],
   controllers: [AppController],
   providers: [AppService],

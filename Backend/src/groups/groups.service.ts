@@ -5,13 +5,24 @@ import { Group, GroupDocument } from './schemas/groups.schema';
 import { CreateGroupDto } from './dtos/createGroup.dto';
 import { JoinGroupDto, RespondToJoinRequestDto, KickMemberDto, SetAdminDto } from './dtos/manageMember.dto';
 import { UserService } from '../user/user.service';
+import { PutObjectCommand, S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { uuidv7 } from 'uuidv7';
 
 @Injectable()
 export class GroupsService {
+  private readonly s3Client: S3Client;
+  private readonly bucketName: string;
+
   constructor(
     @InjectModel(Group.name) private groupModel: Model<GroupDocument>,
     private userService: UserService,
-  ) {}
+  ) {
+    this.s3Client = new S3Client({
+      region: process.env.BUCKET_REGION,
+    });
+    this.bucketName = process.env.BUCKET_NAME!;
+  }
 
   async findAll(): Promise<Group[]> {
     return this.groupModel.find().exec();
@@ -255,5 +266,85 @@ export class GroupsService {
     }
 
     // TODO: Notify user about admin status change
+  }
+
+  async getGroupWithSignedUrls(groupId: string): Promise<Group> {
+    const group = await this.groupModel.findById(groupId);
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    // Generate signed URLs for icon and background image if they exist
+    if (group.icon) {
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: group.icon
+      });
+      group.icon = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
+    }
+
+    if (group.backgroundImage) {
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: group.backgroundImage
+      });
+      group.backgroundImage = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
+    }
+
+    return group;
+  }
+
+  // upload icon image
+  async uploadIcon(groupId: string, file: Express.Multer.File): Promise<string> {
+    return this.uploadImage(groupId, file, 'icon');
+  }
+
+  // upload background image
+  async uploadBackgroundImage(groupId: string, file: Express.Multer.File): Promise<string> {
+    return this.uploadImage(groupId, file, 'background');
+  }
+
+  private async uploadImage(groupId: string, file: Express.Multer.File, type: string): Promise<string> {
+    //validate file
+    const allowedExtensions = ['png', 'jpeg', 'jpg']
+    const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+    if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+      throw new BadRequestException('File extension not allowed. Extension should be png, jpg, or jpeg.');
+    }
+
+    const maxSize = 20 * 1024 * 1024; //20MB
+    if (file.size > maxSize) {
+      throw new BadRequestException('File size exceeds the limit of 20MB');
+    }
+
+    const fileName = uuidv7();
+    const key = `${fileName}.${fileExtension}`;
+
+    const uploadParams = {
+      Bucket: this.bucketName,
+      Key: key,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    };
+
+    try {
+      // Upload the file to S3
+      await this.s3Client.send(new PutObjectCommand(uploadParams));
+
+      // Generate a signed URL for the uploaded file
+      const getCommand = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key
+      });
+      const signedUrl = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
+
+      // Update group document with the S3 key (not the signed URL)
+      const updateField = type === 'icon' ? 'icon' : 'backgroundImage';
+      await this.groupModel.findByIdAndUpdate(groupId, { [updateField]: key });
+      
+      return signedUrl;
+    } catch (error) {
+      throw new Error(`Error uploading image: ${error.message}`);
+    }
   }
 }

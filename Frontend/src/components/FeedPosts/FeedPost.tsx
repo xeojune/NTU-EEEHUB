@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { FeedPostProps } from '../../types/postType';
 import PostHeader from './PostHeader';
 import PostContent from './PostContent';
@@ -44,7 +45,6 @@ const FeedPost: React.FC<FeedPostProps> = ({
 
   const handleDelete = async () => {
     try {
-
       const currentUsername = localStorage.getItem('username');
 
       const response = await fetch(`http://localhost:3000/api/posts/${_id}`, {
@@ -56,14 +56,36 @@ const FeedPost: React.FC<FeedPostProps> = ({
       });
 
       if (response.ok) {
+        toast.success('Post deleted successfully! 🗑️', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         onPostDeleted?.(_id);
       } else {
         const data = await response.json();
-        alert(data.message || 'Failed to delete post');
+        toast.error(data.message || 'Failed to delete post', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       }
     } catch (error) {
       console.error('Error deleting post:', error);
-      alert('Failed to delete post');
+      toast.error('Failed to delete post. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 

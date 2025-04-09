@@ -23,6 +23,7 @@ import {
 import { FaMapMarkerAlt, FaPhone, FaGlobe, FaEnvelope, FaThumbsUp, FaFileAlt, FaSpinner, FaUsers, FaUserPlus, FaCalendar } from 'react-icons/fa';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import defaultGroupImage from '../../assets/userImg/default-group-icon.png';
 
 const MessageTextArea = styled.textarea`
   width: 100%;
@@ -522,28 +523,62 @@ const GroupPage: React.FC = () => {
     }
   };
 
+  const handleIconChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !groupId) return;
+
+    setUploading(true);
+    try {
+      const imageUrl = await groupApi.uploadGroupIcon(groupId, file);
+      setGroup(prev => prev ? { ...prev, icon: imageUrl } : null);
+      toast.success('Group icon updated successfully');
+    } catch (error) {
+      console.error('Error uploading group icon:', error);
+      toast.error('Failed to upload group icon. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleBackgroundChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !groupId) return;
+
+    setUploading(true);
+    try {
+      const imageUrl = await groupApi.uploadGroupBackground(groupId, file);
+      setGroup(prev => prev ? { ...prev, backgroundImage: imageUrl } : null);
+      toast.success('Group background updated successfully');
+    } catch (error) {
+      console.error('Error uploading background image:', error);
+      toast.error('Failed to upload background image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleLogoClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !groupId) return;
+  // const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (!file || !groupId) return;
 
-    setUploading(true);
-    try {
-      const imageUrl = await groupApi.uploadGroupLogo(groupId, file);
-      setGroup(prev => prev ? { ...prev, icon: imageUrl } : null);
-      toast.success('Group logo updated successfully');
-    } catch (error) {
-      console.error('Error uploading group logo:', error);
-      toast.error('Failed to upload group logo. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  };
+  //   setUploading(true);
+  //   try {
+  //     const imageUrl = await groupApi.uploadGroupLogo(groupId, file);
+  //     setGroup(prev => prev ? { ...prev, icon: imageUrl } : null);
+  //     toast.success('Group logo updated successfully');
+  //   } catch (error) {
+  //     console.error('Error uploading group logo:', error);
+  //     toast.error('Failed to upload group logo. Please try again.');
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
 
   const handleEventFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -689,7 +724,7 @@ const GroupPage: React.FC = () => {
         <ProfileSection>
           <div style={{ position: 'relative' }}>
             <Avatar 
-              src={group.icon || "/default-group-icon.png"} 
+              src={group.icon || defaultGroupImage} 
               alt={group.name}
               onClick={user && (group.creator === user._id || group.admins.includes(user._id)) ? handleLogoClick : undefined}
               style={{ cursor: user && (group.creator === user._id || group.admins.includes(user._id)) ? 'pointer' : 'default' }}
@@ -714,7 +749,7 @@ const GroupPage: React.FC = () => {
             <input
               type="file"
               ref={fileInputRef}
-              onChange={handleFileChange}
+              onChange={handleIconChange}
               style={{ display: 'none' }}
               accept="image/*"
             />

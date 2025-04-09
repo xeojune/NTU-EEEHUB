@@ -141,15 +141,42 @@ export const groupApi = {
     return groupApiInstance.put('/groups/admin', adminData);
   },
 
-  uploadGroupLogo(groupId: string, file: File): Promise<string> {
+  async uploadGroupIcon(groupId: string, file: File): Promise<string> {
     const formData = new FormData();
-    formData.append('image', file);
-    
-    return groupApiInstance.post(`/groups/${groupId}/icon`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }).then(response => response.data);
+    formData.append('file', file);
+
+    const response = await groupApiInstance.post(
+      `/groups/${groupId}/icon`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  async uploadGroupBackground(groupId: string, file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await groupApiInstance.post(
+      `/groups/${groupId}/background`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  // Get signed URL for group icon
+  getGroupIconUrl: async (groupId: string): Promise<string> => {
+    const response = await groupApiInstance.get(`/groups/${groupId}/icon-url`);
+    return response.data.url;
   },
 
   // Event related endpoints

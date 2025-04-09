@@ -1,13 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast'; // Import toast from react-hot-toast
 import postApiInstance from './postApiInstance';
+import { notificationApi, NotificationType } from './notificationApi';
+import { friendsApi } from './friendsApi';
 
 // Define the type for the API response
 export interface CreatePostResponse {
   success: boolean;
   message: string;
   post: {
-    id: string;
+    _id: string; // Changed from id to _id to match MongoDB schema
     username: string;
     caption: string;
     imageUrls: string[];
@@ -61,7 +63,7 @@ export const createPost = async (payload: {
 };
 
 interface UseCreatePostMutationProps {
-  onSuccess?: () => void;
+  onSuccess?: (data: CreatePostResponse) => void;
   onError?: () => void;
 }
 
@@ -70,28 +72,66 @@ export const useCreatePostMutation = ({ onSuccess, onError }: UseCreatePostMutat
   
   return useMutation({
     mutationFn: createPost,
-    onSuccess: (data) => {
-      // Show success message
-      toast.success('Successfully created post');
-      
-      // Invalidate and refetch posts query to refresh the feed
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
-      // Invalidate user points since they've been deducted
-      const userId = localStorage.getItem('userId');
-      if (userId) {
-        queryClient.invalidateQueries({ queryKey: ['userPoints', userId] });
-        queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
+    onSuccess: async (data) => {
+      try {
+        // Show success message
+        toast.success('Successfully created post');
+        
+        // Get current user's followers
+        const userId = localStorage.getItem('userId');
+        const username = localStorage.getItem('username');
+        
+        if (userId && username && data.success && data.post) {
+          console.log('Post created successfully:', data.post); // Debug log
+          
+          try {
+            // Get followers
+            const followersResponse = await friendsApi.getFollowers(userId);
+            const followers = followersResponse.data.followers || [];
+            console.log('Found followers:', followers.length); // Debug log
+            
+            if (followers.length > 0) {
+              // Create a single notification for all followers
+              await notificationApi.createNotification({
+                recipientId: followers.map(follower => follower.userId), // Send array of recipient IDs
+                senderId: userId,
+                type: NotificationType.NEW_POST,
+                content: `${username} created a new post`,
+                entityId: data.post._id,
+                entityType: 'Post'
+              });
+              console.log('Successfully created notification for all followers');
+            } else {
+              console.log('No followers found to notify');
+            }
+          } catch (error: any) {
+            console.error('Error creating notifications:', error);
+            if (error.response) {
+              console.error('Error details:', {
+                status: error.response.status,
+                data: error.response.data
+              });
+            }
+          }
+        } else {
+          console.log('Missing required data:', { userId, username, postSuccess: data.success });
+        }
+        
+        // Invalidate queries to refresh UI
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        if (userId) {
+          queryClient.invalidateQueries({ queryKey: ['userPoints', userId] });
+          queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
+        }
+        
+        // Call the custom onSuccess callback
+        onSuccess?.(data);
+      } catch (error) {
+        console.error('Error in post creation success handler:', error);
       }
-      
-      // Call the custom onSuccess callback if provided
-      onSuccess?.();
     },
     onError: (error: Error) => {
-      // Show error message
       toast.error(error.message || 'Failed to create post');
-      
-      // Call the custom onError callback if provided
       onError?.();
     }
   });

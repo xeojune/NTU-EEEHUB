@@ -30,6 +30,9 @@ export class User extends Document {
 
     @Prop({default: 'Beginner'})
     ranking: string;
+
+    @Prop({default: ''})
+    detail: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
