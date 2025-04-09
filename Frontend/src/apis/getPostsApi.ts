@@ -27,7 +27,7 @@ export const getPosts = async ({ page = 1, username }: GetPostsParams = {}): Pro
     }
     params.append('userId', userId);
     
-    const response = await axios.get(`http://localhost:3000/api/posts?${params.toString()}`);
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/posts?${params.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching posts:', error);

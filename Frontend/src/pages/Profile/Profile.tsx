@@ -190,7 +190,7 @@ const Profile: React.FC = () => {
                 // Fetch user profile to get updated follower/following counts and ranking
                 await fetchUserProfile();
                 
-                const response = await fetch(`http://localhost:3000/api/posts?userId=${userId}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/posts?userId=${userId}`);
                 const allPosts = await response.json();
 
                 // Filter posts by the current user
@@ -226,7 +226,7 @@ const Profile: React.FC = () => {
         formData.append('image', file);
 
         try {
-            const response = await fetch(`http://localhost:3000/users/${userId}/background-image`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/background-image`, {
                 method: 'POST',
                 body: formData,
             });
@@ -249,7 +249,7 @@ const Profile: React.FC = () => {
         if (!userId) return;
         
         try {
-            const response = await fetch(`http://localhost:3000/users/${userId}/background-image`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/background-image`, {
                 method: 'DELETE',
             });
 
@@ -277,7 +277,7 @@ const Profile: React.FC = () => {
         formData.append('image', file);
 
         try {
-            const response = await fetch(`http://localhost:3000/users/${userId}/profile-image`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/profile-image`, {
                 method: 'POST',
                 body: formData,
             });

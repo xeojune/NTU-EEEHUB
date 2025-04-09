@@ -2,7 +2,7 @@ import axios from 'axios';
 import { refreshApi } from './refreshApi';
 
 const authApiInstance = axios.create({
-  baseURL: 'http://localhost:3000', // Replace with your backend's base URL
+  baseURL: import.meta.env.VITE_API_URL, // Replace with your backend's base URL
   headers: {
     'Content-Type': 'application/json',
   },

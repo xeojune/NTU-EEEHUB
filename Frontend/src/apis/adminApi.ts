@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const adminApiInstance = axios.create({
-  baseURL: 'http://localhost:3000', // Make sure this matches your backend port
+  baseURL: import.meta.env.VITE_API_URL, // Make sure this matches your backend port
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'

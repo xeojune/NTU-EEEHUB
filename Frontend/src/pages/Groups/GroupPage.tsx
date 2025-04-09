@@ -307,7 +307,7 @@ const MemberCardComponent: React.FC<{
           console.log('Profile Image URL:', userProfile.profileImg);
           setAvatar(userProfile.profileImg.startsWith('http') 
             ? userProfile.profileImg 
-            : `http://localhost:3000${userProfile.profileImg}`
+            : `${import.meta.env.VITE_API_URL}${userProfile.profileImg}`
           );
         } else {
           console.log('No profile image found for user:', member.user);
@@ -373,7 +373,7 @@ const PendingRequestCard: React.FC<{
         if (userProfile.profileImg) {
           setAvatar(userProfile.profileImg.startsWith('http') 
             ? userProfile.profileImg 
-            : `http://localhost:3000${userProfile.profileImg}`
+            : `${import.meta.env.VITE_API_URL}${userProfile.profileImg}`
           );
         } else {
           setAvatar("/default-avatar.png");

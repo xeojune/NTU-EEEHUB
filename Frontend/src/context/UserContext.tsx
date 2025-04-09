@@ -63,7 +63,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!userId) return;
     
     try {
-      const response = await fetch(`http://localhost:3000/users/${userId}/profile`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/profile`);
       const userData = await response.json();
       
       setUser({
@@ -94,7 +94,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchUserProfileByUsername = useCallback(async (username: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/users/name/${username}/profile`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/name/${username}/profile`);
       return await response.json();
     } catch (error) {
       console.error('Error fetching user profile by username:', error);
@@ -156,7 +156,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchUserProfileById = useCallback(async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/users/${userId}/profile`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/profile`);
       if (!response.ok) {
         throw new Error('Failed to fetch user profile');
       }

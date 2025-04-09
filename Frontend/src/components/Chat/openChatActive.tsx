@@ -181,7 +181,7 @@ const OpenChatActive: React.FC<OpenChatActiveProps> = ({ selectedRoom }) => {
     if (userCache[userId]) return userCache[userId];
 
     try {
-      const response = await fetch(`http://localhost:3000/users/${userId}/profile`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/profile`);
       const userProfile = await response.json();
       
       const userInfo = {

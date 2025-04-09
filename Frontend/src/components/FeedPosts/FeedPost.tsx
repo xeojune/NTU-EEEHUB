@@ -47,7 +47,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
     try {
       const currentUsername = localStorage.getItem('username');
 
-      const response = await fetch(`http://localhost:3000/api/posts/${_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/posts/${_id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

@@ -28,7 +28,7 @@ const RecentPosts: React.FC<RecentPostsProps> = ({ posts, onPostDeleted }) => {
         event.stopPropagation();
         try {
             const currentUsername = localStorage.getItem('username');
-            const response = await fetch(`http://localhost:3000/api/posts/${postId}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/posts/${postId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

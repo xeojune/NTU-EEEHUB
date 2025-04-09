@@ -19,7 +19,7 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
 
   useEffect(() => {
     // Fetch existing rooms
-    fetch('http://localhost:3000/api/open-chat/rooms')
+    fetch(`${import.meta.env.VITE_API_URL}/api/open-chat/rooms`)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -105,7 +105,7 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/open-chat/rooms', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/open-chat/rooms`, {
         method: 'POST',
         body: formData,
         headers: {
