@@ -12,6 +12,7 @@ export interface User {
     profileImg: string;
     followedAt?: string;
     isFollowing?: boolean;
+    followerCount: number;
 }
 
 interface PaginatedData<T> {

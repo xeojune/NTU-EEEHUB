@@ -29,6 +29,7 @@ interface UserContextType {
   getUserAvatar: (username: string) => Promise<string>;
   getUserBackground: (username: string) => Promise<string>;
   setUser: (user: User | null) => void;
+  fetchUserProfileById: (userId: string) => Promise<any>;
 }
 
 interface AvatarCache {
@@ -153,6 +154,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [backgroundCache, fetchUserProfileByUsername]);
 
+  const fetchUserProfileById = useCallback(async (userId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/users/${userId}/profile`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile');
+      }
+      const userData = await response.json();
+      return userData;
+    } catch (error) {
+      console.error('Error fetching user profile by ID:', error);
+      return null;
+    }
+  }, []);
+
   const clearUserData = useCallback(() => {
     setUser(null);
     setProfileImage(defaultAvatar);
@@ -182,6 +197,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       getUserAvatar,
       getUserBackground,
       setUser,
+      fetchUserProfileById
     }}>
       {children}
     </UserContext.Provider>

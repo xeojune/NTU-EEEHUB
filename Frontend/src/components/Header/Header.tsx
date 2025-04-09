@@ -31,10 +31,10 @@ const Header: React.FC = () => {
                     <Logo>EEEHub</Logo>
                 </LogoWrap>
             </HeaderLogo>
-            <SearchWrap>
+            {/* <SearchWrap>
                 <SearchIcon/>
                 <SearchInput placeholder='Search EEEHub' type='text'/>
-            </SearchWrap>
+            </SearchWrap> */}
 
         </HeaderLeft>
 

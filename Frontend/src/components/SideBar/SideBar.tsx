@@ -28,7 +28,7 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const navigate = useNavigate();
   const [username, setUsername] = useState<string | null>(null);
-  const { profileImage } = useUser();
+  const { profileImage, clearUserData } = useUser();
 
   useEffect(() => {
     const fetchUsername = async () => {
@@ -72,6 +72,24 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
   const openCreateModal = () => setShowCreate(true);
   const closeCreateModal = () => setShowCreate(false);
 
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // Clear user context data
+    clearUserData();
+    
+    // Clear authentication tokens from localStorage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+
+    //alert Logged out
+    alert('Logged out Successfully');
+
+    // Navigate to login page
+    navigate('/login');
+  };
 
   return (
     <SideBarContainer>
@@ -131,8 +149,7 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
         {/* Dropdown Menu */}
         {showDropdown && (
           <MoreMenu>
-            <DropdownItem>Settings</DropdownItem>
-            <DropdownItem>Logout</DropdownItem>
+            <DropdownItem onClick={handleLogout}>Logout</DropdownItem>
           </MoreMenu>
         )}
       </div>

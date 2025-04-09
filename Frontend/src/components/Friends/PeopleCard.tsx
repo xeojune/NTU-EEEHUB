@@ -55,7 +55,7 @@ const PeopleCard: React.FC<PeopleCardProps> = ({
   };
 
   return (
-    <Card onClick={handleCardClick}>
+    <Card>
       <CoverImage url={backgroundUrl}>
         <ProfileImage url={avatarUrl} />
       </CoverImage>
