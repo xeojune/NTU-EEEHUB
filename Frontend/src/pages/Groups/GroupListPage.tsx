@@ -9,7 +9,6 @@ import {
   CreateButton,
   GroupList,
   GroupCard,
-  GroupImage,
   GroupName,
   GroupDescription,
   MemberCount,

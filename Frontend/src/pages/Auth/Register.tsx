@@ -55,7 +55,11 @@ const Register: React.FC = () => {
       setErrorMessage('');
     } else {
       setEmailValid(false);
-      setErrorMessage('Please enter a valid email address');
+      if (!newEmail.includes('@')) {
+        setErrorMessage('Please enter a valid email address');
+      } else {
+        setErrorMessage('');
+      }
     }
   };
 
@@ -202,6 +206,9 @@ const Register: React.FC = () => {
               )}
             </InputWrap>
             <ForgotPasswordLink href="/login">Already have an account?</ForgotPasswordLink>
+            {errorMessage && (
+              <ErrorMessageWrap>{errorMessage}</ErrorMessageWrap>
+            )}
           </ContentWrap>
           <ButtonWrap>
             <RegisterButton onClick={onClickRegister} disabled={notAllow}>

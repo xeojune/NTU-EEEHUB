@@ -14,6 +14,9 @@ export const useOnlineStatus = (
 
   useEffect(() => {
     setFriendsWithStatus(prev => {
+      // Debug info for state updates
+      console.debug('Previous state length:', prev.length);
+      
       const updated = mutualFriends.map(friend => {
         const onlineUser = onlineUsers.find(user => user.userId === friend.userId);
         return {

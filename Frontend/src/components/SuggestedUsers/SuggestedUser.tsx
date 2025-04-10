@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router';
 import { AvatarInfoContainer, FollowButton, SuggestedUserContainer, SuggestedUserFollowers, SuggestedUserName, SuggestedUserProfileContainer } from '../../styles/Suggested/SuggestedUserStyle'
 import { AvatarImage } from '../../styles/FeedPosts/PostHeaderStyle'
 import { useUser } from '../../context/UserContext'
@@ -22,7 +21,6 @@ const SuggestedUser: React.FC<SuggestedUserProps> = ({
   isFollowing,
   onFollowToggle
 }) => {
-  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string>(profileImg || defaultAvatar);
   const { getUserAvatar } = useUser();
 
@@ -39,13 +37,6 @@ const SuggestedUser: React.FC<SuggestedUserProps> = ({
     
     loadAvatar();
   }, [username, getUserAvatar]);
-
-  const handleUserClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button')) {
-      return;
-    }
-    navigate(`/profile/${username}`);
-  };
 
   return (
     <SuggestedUserContainer>

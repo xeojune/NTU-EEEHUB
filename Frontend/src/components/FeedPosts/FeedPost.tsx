@@ -145,7 +145,6 @@ const FeedPost: React.FC<FeedPostProps> = ({
         totalComments={totalComments}
         postImage={imageUrls}
         username={username}
-        avatar={avatar}
         points={points}
         distributedPoints={distributedPoints}
         date={createdAt}

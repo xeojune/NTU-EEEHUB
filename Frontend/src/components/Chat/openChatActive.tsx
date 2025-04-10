@@ -4,17 +4,13 @@ import { useUser } from '../../context/UserContext';
 import styled from 'styled-components';
 import {
   ActiveChatContainer,
-  ActiveChatHeader,
   UserInfo,
   ActiveChatName,
   ActiveChatStatus,
   ChatArea,
   MessagesContainer,
   ChatInput,
-  NoChatSelected,
-  ChatAvatar,
-  OnlineStatus,
-  ActionButtons
+  NoChatSelected
 } from '../../styles/Chat/chatStyle';
 import { FaPaperPlane } from 'react-icons/fa';
 import defaultAvatar from '../../assets/userImg/defaultAvatar.png';
@@ -173,7 +169,7 @@ const DefaultAvatar = styled.div`
 const OpenChatActive: React.FC<OpenChatActiveProps> = ({ selectedRoom }) => {
   const [messageInput, setMessageInput] = useState('');
   const { socket } = useOpenSocket();
-  const { user, fetchUserProfile, fetchUserProfileByUsername } = useUser();
+  const { user } = useUser();
   const [messages, setMessages] = useState<MessageWithUser[]>([]);
   const [userCache, setUserCache] = useState<{ [key: string]: { name: string; avatar: string } }>({});
 

@@ -11,8 +11,8 @@ import {
 } from '../../styles/SideBar/SideBarStyle'
 
 // Import icons
-import { AiFillHome, AiOutlineCompass, AiOutlineMessage, AiOutlineBell, AiOutlinePlusCircle, AiOutlineMore } from 'react-icons/ai'
-import { Link, useNavigate } from 'react-router'
+import { AiFillHome, AiOutlineMessage, AiOutlineBell, AiOutlinePlusCircle, AiOutlineMore } from 'react-icons/ai'
+import { useNavigate } from 'react-router'
 import { getUserById } from '../../apis/getUserApi'
 import NewPost from '../NewPost/NewPost'
 import { useUser } from '../../context/UserContext'

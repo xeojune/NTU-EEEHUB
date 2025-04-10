@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { AddFriendButton, Card, ContentContainer, CoverImage, Description, Name, ProfileImage } from '../../styles/Friends/PeopleCardStyle';
+import { AddFriendButton, Card, ContentContainer, CoverImage, Name, ProfileImage } from '../../styles/Friends/PeopleCardStyle';
 import { useUser } from '../../context/UserContext';
 import defaultAvatar from '../../assets/userImg/defaultAvatar.png';
 import defaultBackground from '../../assets/userImg/defaultBackground.png';
@@ -22,7 +21,6 @@ const PeopleCard: React.FC<PeopleCardProps> = ({
   isFollowing,
   onFollowToggle,
 }) => {
-  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string>(profileImg || defaultAvatar);
   const [backgroundUrl, setBackgroundUrl] = useState<string>(backgroundImg || defaultBackground);
   const { getUserAvatar, getUserBackground } = useUser();
@@ -45,14 +43,6 @@ const PeopleCard: React.FC<PeopleCardProps> = ({
     
     loadImages();
   }, [username, getUserAvatar, getUserBackground]);
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent navigation if clicking the follow button
-    if ((e.target as HTMLElement).closest('button')) {
-      return;
-    }
-    navigate(`/profile/${username}`);
-  };
 
   return (
     <Card>

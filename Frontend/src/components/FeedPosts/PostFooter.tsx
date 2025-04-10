@@ -5,8 +5,6 @@ import {
   IconButton,
   LikesText,
   ViewCommentsButton,
-  CommentInput,
-  CommentSection,
   CommentsButtonContainer
 } from '../../styles/FeedPosts/PostFooterStyle'
 import { AiOutlineHeart, AiFillHeart, AiOutlineComment, AiOutlineSend } from 'react-icons/ai'
@@ -21,7 +19,6 @@ interface PostFooterProps {
   totalComments: number;
   postImage: string | string[];
   username?: string;
-  avatar?: string;
   points: number;
   distributedPoints?: number;
   date: string;
@@ -33,7 +30,6 @@ const PostFooter: React.FC<PostFooterProps> = ({
   totalComments = 0,
   postImage,
   username,
-  avatar,
   points,
   distributedPoints = 0,
   date

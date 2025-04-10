@@ -3,9 +3,7 @@ import { Link } from "react-router"
 import { IoIosSearch } from "react-icons/io";
 import { TiHome } from "react-icons/ti";
 import { FaUserFriends, FaUsers } from "react-icons/fa";
-import { MdOndemandVideo } from "react-icons/md";
 import { IoChatboxEllipses } from "react-icons/io5";
-
 export const HeaderContainer = styled.header`
     position: fixed;
     top: 0;

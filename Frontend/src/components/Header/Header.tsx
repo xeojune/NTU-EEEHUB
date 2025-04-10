@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ChatIcon, FriendsIcon, GroupIcon, HeaderContainer, HeaderLeft, HeaderLogo, HeaderMiddle, HeaderRight, HomeIcon, Logo, LogoWrap, MiddleLogo, SearchIcon, SearchInput, SearchWrap } from '../../styles/Header/HeaderStyle'
+import { ChatIcon, FriendsIcon, GroupIcon, HeaderContainer, HeaderLeft, HeaderLogo, HeaderMiddle, HeaderRight, HomeIcon, Logo, LogoWrap, MiddleLogo } from '../../styles/Header/HeaderStyle'
 import { useLocation, useNavigate } from 'react-router';
 
 const Header: React.FC = () => {

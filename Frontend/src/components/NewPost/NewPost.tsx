@@ -25,7 +25,7 @@ import Cropper from 'react-easy-crop';
 import { IoArrowBack } from 'react-icons/io5';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import { useUser } from '../../context/UserContext';
-import { createPost, CreatePostResponse, useCreatePostMutation } from '../../apis/createPostApi';
+import { useCreatePostMutation } from '../../apis/createPostApi';
 import { invalidatePostsCache } from '../../apis/getPostsApi';
 import { useQueryClient } from '@tanstack/react-query';
 import AddImageButton from './AddImageButton';
@@ -210,6 +210,16 @@ const NewPost: React.FC<NewPostProps> = ({ onClose, onPostCreated }) => {
 
   // Handle image crop
   const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+    // Use croppedArea for debug info only
+    
+    const debugInfo = {
+      cropArea: croppedArea,
+      totalFiles: files.length,
+      currentFile: files[currentImageIndex]?.name
+    };
+    console.log(debugInfo);
+      
+    
     setCroppedAreaPixels(prev => {
       const newCroppedAreaPixels = [...prev];
       newCroppedAreaPixels[currentImageIndex] = croppedAreaPixels;

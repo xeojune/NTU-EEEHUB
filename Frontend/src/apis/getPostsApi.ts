@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { FeedPostProps } from '../types/postType';
-import { useQuery, UseQueryResult, useQueryClient } from '@tanstack/react-query';
+import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
 interface GetPostsParams {
   page?: number;
@@ -38,8 +38,6 @@ export const getPosts = async ({ page = 1, username }: GetPostsParams = {}): Pro
 export const POSTS_QUERY_KEY = 'posts';
 
 export function usePosts({ page = 1, username }: { page: number; username: string }): UseQueryResult<FeedPostProps[], PostsError> {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryFn: () => getPosts({ page, username }),
     queryKey: [POSTS_QUERY_KEY, page, username],

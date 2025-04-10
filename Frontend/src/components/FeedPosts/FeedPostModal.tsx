@@ -206,7 +206,7 @@ const FeedPostModal: React.FC<FeedPostModalProps> = ({
     }
   };
 
-  const handleDistributePoints = async (commentId: string, commentUserId: string) => {
+  const handleDistributePoints = async (commentId: string) => {
     const pointsToAdd = pointsToDistribute[commentId];
     if (!pointsToAdd || pointsToAdd <= 0) return;
 
@@ -316,7 +316,7 @@ const FeedPostModal: React.FC<FeedPostModalProps> = ({
                         placeholder="Points"
                       />
                       <DistributeButton
-                        onClick={() => handleDistributePoints(comment._id, comment.userId)}
+                        onClick={() => handleDistributePoints(comment._id)}
                         disabled={!pointsToDistribute[comment._id] || pointsToDistribute[comment._id] <= 0}
                       >
                         Distribute

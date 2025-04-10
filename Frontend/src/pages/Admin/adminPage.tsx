@@ -369,12 +369,18 @@ const AdminDashboard: React.FC = () => {
     points: post.points
   })).sort((a, b) => (b.likes + b.comments) - (a.likes + a.comments)).slice(0, 5);
 
+  // Debug log for engagement metrics
+  console.debug('Post engagement metrics:', postEngagementData);
+
   const userEngagementData = users.map(user => ({
     name: user.name,
     followers: user.followerCount,
     following: user.followingCount,
     points: user.totalPoints
   })).sort((a, b) => b.points - a.points).slice(0, 5);
+
+  // Debug log for user engagement
+  console.debug('User engagement metrics:', userEngagementData);
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

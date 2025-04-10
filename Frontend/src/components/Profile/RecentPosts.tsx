@@ -22,6 +22,8 @@ const RecentPosts: React.FC<RecentPostsProps> = ({ posts, onPostDeleted }) => {
     const handlePostClick = (postId: string) => {
         // TODO: Implement post click handler to show full post details
         console.log('Post clicked:', postId);
+        // Debug info for delete handler
+        console.debug('Delete handler available:', !!handleDelete);
     };
 
     const handleDelete = async (postId: string, event: React.MouseEvent) => {

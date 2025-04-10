@@ -22,6 +22,7 @@ import {
 } from '../../styles/Groups/GroupPageStyle';
 import { FaMapMarkerAlt, FaPhone, FaGlobe, FaEnvelope, FaThumbsUp, FaFileAlt, FaSpinner, FaUsers, FaUserPlus, FaCalendar } from 'react-icons/fa';
 import Calendar from 'react-calendar';
+import { Value } from 'react-calendar/dist/esm/shared/types.js';
 import 'react-calendar/dist/Calendar.css';
 import defaultGroupImage from '../../assets/userImg/default-group-icon.png';
 
@@ -430,7 +431,7 @@ const PendingRequestCard: React.FC<{
 
 const GroupPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
-  const { user, getUserAvatar } = useUser();
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState(0);
   const [group, setGroup] = useState<Group | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -448,11 +449,11 @@ const GroupPage: React.FC = () => {
   });
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const handleDateChange = (value: Date | Date[] | null) => {
+  const handleDateChange = (value: Value) => {
     if (value instanceof Date) {
       setSelectedDate(value);
-    } else if (Array.isArray(value) && value.length > 0) {
-      setSelectedDate(value[0]);
+    } else if (Array.isArray(value) && value.length > 0 && value[0]) {
+      setSelectedDate(value[0] as Date);
     }
   };
 
@@ -540,22 +541,22 @@ const GroupPage: React.FC = () => {
     }
   };
 
-  const handleBackgroundChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !groupId) return;
+  // const handleBackgroundChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (!file || !groupId) return;
 
-    setUploading(true);
-    try {
-      const imageUrl = await groupApi.uploadGroupBackground(groupId, file);
-      setGroup(prev => prev ? { ...prev, backgroundImage: imageUrl } : null);
-      toast.success('Group background updated successfully');
-    } catch (error) {
-      console.error('Error uploading background image:', error);
-      toast.error('Failed to upload background image. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  };
+  //   setUploading(true);
+  //   try {
+  //     const imageUrl = await groupApi.uploadGroupBackground(groupId, file);
+  //     setGroup(prev => prev ? { ...prev, backgroundImage: imageUrl } : null);
+  //     toast.success('Group background updated successfully');
+  //   } catch (error) {
+  //     console.error('Error uploading background image:', error);
+  //     toast.error('Failed to upload background image. Please try again.');
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
 
   const handleLogoClick = () => {
     if (fileInputRef.current) {

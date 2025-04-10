@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../Layout';
-import { notificationApi, Notification, NotificationType } from '../../apis/notificationApi';
+import { notificationApi, Notification } from '../../apis/notificationApi';
 import {
   NotificationContainer,
   NotificationItem,
@@ -23,7 +23,6 @@ const NotificationPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [totalPages, setTotalPages] = useState(1);
   const [avatarUrls, setAvatarUrls] = useState<{ [key: string]: string }>({});
   const { getUserAvatar } = useUser();
 
@@ -58,7 +57,6 @@ const NotificationPage: React.FC = () => {
         setNotifications(prev => 
           page === 1 ? newNotifications : [...prev, ...newNotifications]
         );
-        setTotalPages(response.totalPages);
         setHasMore(page < response.totalPages);
       } else {
         console.error('Invalid response format:', response);

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { AxiosError } from 'axios';
 import Layout from '../Layout';
 import PeopleCard from '../../components/Friends/PeopleCard';
 import { CardsContainer, FriendsPageContainer, MoreButton, Section, SectionTitle, SectionContainer } from '../../styles/Friends/FriendsPageStyle';
@@ -283,6 +282,7 @@ const FriendsPage: React.FC = () => {
     };
 
     const handleMoreClick = (section: 'followers' | 'following') => {
+        console.debug(`Loading more ${section}...`);
         if (section === 'followers' && followersPagination.page < followersPagination.totalPages) {
             fetchFollowers(followersPagination.page + 1);
         } else if (section === 'following' && followingPagination.page < followingPagination.totalPages) {
@@ -291,10 +291,23 @@ const FriendsPage: React.FC = () => {
     };
 
     const loadMorePotentialFriends = () => {
+        console.debug('Loading more potential friends...');
         if (!potentialFriendsPagination.loading && potentialFriendsPagination.page < potentialFriendsPagination.totalPages) {
             fetchPotentialFriends(potentialFriendsPagination.page + 1);
         }
     };
+
+    useEffect(() => {
+        const debugProfile = async () => {
+            try {
+                const profile = await fetchUserProfile();
+                console.debug('User profile:', profile);
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+            }
+        };
+        debugProfile();
+    }, [fetchUserProfile]);
 
     useEffect(() => {
         const initializeLists = async () => {
@@ -344,7 +357,7 @@ const FriendsPage: React.FC = () => {
                         </CardsContainer>
                         {followersPagination.page < followersPagination.totalPages && (
                             <MoreButton
-                                onClick={() => fetchFollowers(followersPagination.page + 1)}
+                                onClick={() => handleMoreClick('followers')}
                                 disabled={followersPagination.loading}
                             >
                                 {followersPagination.loading ? 'Loading...' : 'Show More'}
@@ -370,7 +383,7 @@ const FriendsPage: React.FC = () => {
                         </CardsContainer>
                         {followingPagination.page < followingPagination.totalPages && (
                             <MoreButton
-                                onClick={() => fetchFollowing(followingPagination.page + 1)}
+                                onClick={() => handleMoreClick('following')}
                                 disabled={followingPagination.loading}
                             >
                                 {followingPagination.loading ? 'Loading...' : 'Show More'}
@@ -396,7 +409,7 @@ const FriendsPage: React.FC = () => {
                         </CardsContainer>
                         {potentialFriendsPagination.page < potentialFriendsPagination.totalPages && (
                             <MoreButton 
-                                onClick={() => fetchPotentialFriends(potentialFriendsPagination.page + 1)}
+                                onClick={loadMorePotentialFriends}
                                 disabled={potentialFriendsPagination.loading}
                             >
                                 {potentialFriendsPagination.loading ? 'Loading...' : 'Load More'}

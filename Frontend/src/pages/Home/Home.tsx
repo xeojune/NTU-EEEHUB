@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Box, Container, Flex, MainContent } from '../../styles/Home/HomeStyle'
+import { Box, Container, Flex } from '../../styles/Home/HomeStyle'
 import FeedPosts from '../../components/FeedPosts/FeedPosts'
 import SuggestedUsers from '../../components/SuggestedUsers/SuggestedUsers'
 import Layout from '../Layout'

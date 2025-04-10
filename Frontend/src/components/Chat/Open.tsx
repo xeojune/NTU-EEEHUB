@@ -147,10 +147,6 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
     });
   };
 
-  const getParticipantsText = (participants: string[]) => {
-    return `${participants.length} participant${participants.length !== 1 ? 's' : ''}`;
-  };
-
   return (
     <Container>
       <HeaderContainer>

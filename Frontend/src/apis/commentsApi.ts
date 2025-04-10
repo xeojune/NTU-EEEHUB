@@ -88,7 +88,7 @@ export const useDeleteCommentMutation = () => {
   return useMutation({
     mutationFn: ({ commentId, userId }: { commentId: string; userId: string }) =>
       deleteComment(commentId, userId),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments'] });
     },
   });
@@ -99,7 +99,7 @@ export const useUpdateCommentMutation = () => {
   
   return useMutation({
     mutationFn: updateComment,
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments'] });
     },
   });

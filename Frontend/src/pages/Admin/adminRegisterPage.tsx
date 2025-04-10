@@ -67,7 +67,11 @@ const AdminRegister: React.FC = () => {
       setErrorMessage('');
     } else {
       setEmailValid(false);
-      setErrorMessage('Please enter a valid email address');
+      if (!newEmail.includes('@')) {
+        setErrorMessage('Please enter a valid email address');
+      } else {
+        setErrorMessage('');
+      }
     }
   };
 
@@ -237,6 +241,9 @@ const AdminRegister: React.FC = () => {
               REGISTER AS ADMIN
             </RegisterButton>
           </ButtonWrap>
+          {errorMessage && (
+            <ErrorMessageWrap style={{ marginTop: '10px' }}>{errorMessage}</ErrorMessageWrap>
+          )}
         </StyledRegisterBox>
       </RegisterContainer>
 

@@ -31,7 +31,7 @@ export const createPost = async (payload: {
     const formData = new FormData();
     
     // Ensure each file is appended with a unique field name
-    files.forEach((file, index) => {
+    files.forEach((file) => {
       formData.append(`images`, file); // Keep the field name as 'images' for array handling on server
     });
     

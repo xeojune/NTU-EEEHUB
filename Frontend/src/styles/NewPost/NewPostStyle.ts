@@ -1,4 +1,4 @@
-import styled, { keyframes, css } from "styled-components";
+import styled from "styled-components";
 import { LuImagePlus } from "react-icons/lu";
 
 export const NewPostContainer = styled.div`
@@ -158,7 +158,7 @@ export const InquiryContainer = styled.div`
 `;
 
 // Animation keyframes
-const expandWidth = keyframes`
+const expandWidth = `
   from {
     width: 0;
     opacity: 0;
@@ -169,7 +169,7 @@ const expandWidth = keyframes`
   }
 `;
 
-const collapseWidth = keyframes`
+const collapseWidth = `
   from {
     width: 100%;
     opacity: 1;
