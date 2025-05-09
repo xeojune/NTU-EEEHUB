@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import defaultAvatar from '../../assets/userImg/defaultAvatar.png';
 import { useUser } from '../../context/UserContext';
+import { useNotification } from '../../context/NotificationContext';
 
 const NotificationPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -25,6 +26,7 @@ const NotificationPage: React.FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [avatarUrls, setAvatarUrls] = useState<{ [key: string]: string }>({});
   const { getUserAvatar } = useUser();
+  const { markAsRead, markAllAsRead } = useNotification();
 
   const userId = localStorage.getItem('userId');
 
@@ -82,7 +84,7 @@ const NotificationPage: React.FC = () => {
     try {
       if (!userId) return;
       
-      await notificationApi.markAllAsRead(userId);
+      await markAllAsRead();
       setNotifications(prev => 
         prev.map(notification => ({
           ...notification,
@@ -98,11 +100,11 @@ const NotificationPage: React.FC = () => {
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await notificationApi.markAsRead(notificationId);
+      await markAsRead(notificationId);
       setNotifications(prev =>
         prev.map(notification =>
           notification._id === notificationId
-            ? { ...notification, read: true } as Notification
+            ? { ...notification, read: true }
             : notification
         )
       );

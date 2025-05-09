@@ -69,4 +69,16 @@ export class AdminController {
   async getUserGrowthData(@Param('userId') userId: string) {
     return this.adminService.getUserGrowthData(userId);
   }
+
+  @Put('users/:id')
+  @UseGuards(AuthGuard, AdminGuard)
+  async updateUser(@Param('id') userId: string, @Body() userData: any) {
+    return this.adminService.updateUser(userId, userData);
+  }
+
+  @Put('posts/:id')
+  @UseGuards(AuthGuard, AdminGuard)
+  async updatePost(@Param('id') postId: string, @Body() postData: any) {
+    return this.adminService.updatePost(postId, postData);
+  }
 }

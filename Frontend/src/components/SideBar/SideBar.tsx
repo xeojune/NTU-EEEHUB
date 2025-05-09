@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router'
 import { getUserById } from '../../apis/getUserApi'
 import NewPost from '../NewPost/NewPost'
 import { useUser } from '../../context/UserContext'
-import { notificationApi } from '../../apis/notificationApi'
+import { useNotification } from '../../context/NotificationContext'
 
 interface SideBarProps {
   refreshFeed?: () => void;
@@ -25,10 +25,10 @@ interface SideBarProps {
 const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false); // Toggle dropdown
   const [showCreate, setShowCreate] = useState<boolean>(false); // Toggle modal
-  const [unreadCount, setUnreadCount] = useState<number>(0);
   const navigate = useNavigate();
   const [username, setUsername] = useState<string | null>(null);
   const { profileImage, clearUserData } = useUser();
+  const { unreadCount } = useNotification();
 
   useEffect(() => {
     const fetchUsername = async () => {
@@ -48,26 +48,6 @@ const SideBar: React.FC<SideBarProps> = ({ refreshFeed }) => {
 
     fetchUsername();
   }, [navigate]);
-
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      try {
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-          const count = await notificationApi.getUnreadCount(userId);
-          setUnreadCount(count);
-        }
-      } catch (error) {
-        console.error('Error fetching unread notifications:', error);
-      }
-    };
-
-    fetchUnreadCount();
-    // Set up an interval to fetch unread count every minute
-    const interval = setInterval(fetchUnreadCount, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const openCreateModal = () => setShowCreate(true);
   const closeCreateModal = () => setShowCreate(false);

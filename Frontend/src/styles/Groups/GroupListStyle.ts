@@ -15,7 +15,8 @@ export const Header = styled.div`
 
 export const Title = styled.h1`
   font-size: 2rem;
-  color: white;
+  color: #1a73e8;
+  margin: 0;
 `;
 
 export const CreateButton = styled.button`
@@ -23,13 +24,16 @@ export const CreateButton = styled.button`
   color: white;
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
     background-color: #1557b0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -37,46 +41,68 @@ export const GroupList = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
+  padding: 1rem;
 `;
 
 export const GroupCard = styled.div`
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1rem;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
   background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 1.5rem;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
   }
 `;
 
-export const GroupImage = styled.img`
-  height: 150px;
-  background-size: cover;
-  background-position: center;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-`;
-
 export const GroupName = styled.h3`
-  margin: 0 0 0.5rem;
-  color: #333;
-  font-size: 1.25rem;
+  margin: 0 0 0.75rem;
+  color: #1a73e8;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.3;
 `;
 
 export const GroupDescription = styled.p`
-  color: #666;
+  color: #5f6368;
   margin: 0 0 1rem;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-export const MemberCount = styled.span`
-  color: #888;
-  font-size: 0.85rem;
+export const MemberCount = styled.div`
+  color: #5f6368;
+  font-size: 0.9rem;
+  margin-top: auto;
+`;
+
+export const NoGroupsContainer = styled.div`
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+export const NoGroupsTitle = styled.h2`
+  color: #1a73e8;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+`;
+
+export const NoGroupsText = styled.p`
+  color: #5f6368;
+  font-size: 1rem;
+  margin-bottom: 2rem;
 `;
 
 // Modal Styles
@@ -96,21 +122,22 @@ export const ModalOverlay = styled.div`
 export const ModalContent = styled.div`
   background: white;
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 16px;
   width: 100%;
   max-width: 500px;
-  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 `;
 
 export const ModalTitle = styled.h2`
+  color: #1a73e8;
   margin: 0 0 1.5rem;
-  color: #333;
+  font-size: 1.5rem;
 `;
 
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 `;
 
 export const FormGroup = styled.div`
@@ -120,46 +147,51 @@ export const FormGroup = styled.div`
 `;
 
 export const Label = styled.label`
-  color: #555;
+  color: #202124;
   font-size: 0.9rem;
+  font-weight: 500;
 `;
 
 export const Input = styled.input`
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
   font-size: 1rem;
+  transition: border-color 0.2s;
 
   &:focus {
-    outline: none;
     border-color: #1a73e8;
+    outline: none;
   }
 `;
 
 export const TextArea = styled.textarea`
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
   font-size: 1rem;
   min-height: 100px;
   resize: vertical;
+  transition: border-color 0.2s;
 
   &:focus {
-    outline: none;
     border-color: #1a73e8;
+    outline: none;
   }
 `;
 
 export const Select = styled.select`
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
   font-size: 1rem;
-  background: white;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
 
   &:focus {
-    outline: none;
     border-color: #1a73e8;
+    outline: none;
   }
 `;
 
@@ -167,53 +199,79 @@ export const ButtonGroup = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 `;
 
-export const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
+export const Button = styled.button<{ variant?: 'primary' }>`
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 
   ${props => props.variant === 'primary' ? `
     background-color: #1a73e8;
     color: white;
+
     &:hover {
       background-color: #1557b0;
     }
   ` : `
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: #f1f3f4;
+    color: #5f6368;
+
     &:hover {
-      background-color: #e0e0e0;
+      background-color: #e8eaed;
     }
   `}
 `;
 
-export const NoGroupsContainer = styled.div`
+export const GroupImage = styled.div<{ url: string }>`
+  height: 150px;
+  background: ${props => `url(${props.url})`};
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 100%);
+  }
+`;
+
+export const GroupContent = styled.div`
+  padding: 1.5rem;
+  position: relative;
+`;
+
+export const GroupFooter = styled.div`
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  text-align: center;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin: 2rem 0;
+  padding-top: 1rem;
+  border-top: 1px solid #e8eaed;
 `;
 
-export const NoGroupsTitle = styled.h3`
-  color: #343a40;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
-`;
+export const GroupPrivacy = styled.span<{ privacy: 'public' | 'private' }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  gap: 0.25rem;
+  background: ${props => props.privacy === 'public' ? '#e8f0fe' : '#fce8e6'};
+  color: ${props => props.privacy === 'public' ? '#1a73e8' : '#d93025'};
 
-export const NoGroupsText = styled.p`
-  color: #6c757d;
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-  line-height: 1.5;
+  svg {
+    width: 14px;
+    height: 14px;
+  }
 `;

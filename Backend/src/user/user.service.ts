@@ -134,6 +134,10 @@ export class UserService {
     // Deduct points
     user.totalPoints -= points;
     await user.save(session ? { session } : {});
+    
+    // Update ranking after points change
+    await this.updateUserRanking(userId);
+    
     return user.totalPoints;
   }
 
@@ -152,6 +156,10 @@ export class UserService {
     // Add points
     user.totalPoints += points;
     await user.save(session ? { session } : {});
+    
+    // Update ranking after points change
+    await this.updateUserRanking(userId);
+    
     return user.totalPoints;
   }
 

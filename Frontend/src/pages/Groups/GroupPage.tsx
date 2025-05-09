@@ -787,9 +787,11 @@ const GroupPage: React.FC = () => {
             <Tab isActive={activeTab === 1} onClick={() => setActiveTab(1)}>
               Members
             </Tab>
-            <Tab isActive={activeTab === 2} onClick={() => setActiveTab(2)}>
-              Events
-            </Tab>
+            {(isMember || isAdmin || isCreator) && (
+              <Tab isActive={activeTab === 2} onClick={() => setActiveTab(2)}>
+                Events
+              </Tab>
+            )}
             {(isAdmin || isCreator) && (
               <Tab isActive={activeTab === 3} onClick={() => setActiveTab(3)}>
                 Requests

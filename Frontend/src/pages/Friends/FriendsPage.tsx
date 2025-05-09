@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Layout from '../Layout';
 import PeopleCard from '../../components/Friends/PeopleCard';
 import { CardsContainer, FriendsPageContainer, MoreButton, Section, SectionTitle, SectionContainer } from '../../styles/Friends/FriendsPageStyle';
@@ -6,6 +6,41 @@ import { friendsApi, User as Person } from '../../apis/friendsApi';
 import { useUser } from '../../context/UserContext';
 import { toast } from 'react-toastify';
 import { notificationApi, NotificationType } from '../../apis/notificationApi';
+import SkeletonUI from '../../components/SkeletonUI';
+import styled from 'styled-components';
+
+const SkeletonCard = styled.div`
+  width: 250px;
+  height: 300px;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+`;
+
+const SkeletonCardContent = styled.div`
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const EmptyStateContainer = styled.div`
+  width: 100%;
+  padding: 40px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const EmptyStateText = styled.p`
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+`;
 
 interface PaginationState {
     page: number;
@@ -19,6 +54,8 @@ const FriendsPage: React.FC = () => {
     const [following, setFollowing] = useState<Person[]>([]);
     const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
     const [potentialFriends, setPotentialFriends] = useState<Person[]>([]);
+    const [showSkeleton, setShowSkeleton] = useState(true);
+    const skeletonTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
     
     const [followersPagination, setFollowersPagination] = useState<PaginationState>({
         page: 1,
@@ -37,6 +74,42 @@ const FriendsPage: React.FC = () => {
         totalPages: 1,
         loading: false
     });
+
+    // Set minimum skeleton display time when component mounts
+    useEffect(() => {
+        skeletonTimeoutRef.current = setTimeout(() => {
+            setShowSkeleton(false);
+        }, 1000);
+
+        return () => {
+            if (skeletonTimeoutRef.current) {
+                clearTimeout(skeletonTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const renderSkeletonCards = (count: number) => (
+        <CardsContainer>
+            {Array(count).fill(0).map((_, idx) => (
+                <SkeletonCard key={idx}>
+                    <SkeletonUI width="100%" height="150px" /> {/* Cover image */}
+                    <div style={{ 
+                        position: 'relative', 
+                        marginTop: '-50px', 
+                        marginLeft: '20px',
+                        width: '80px',
+                        height: '80px'
+                    }}>
+                        <SkeletonUI width="80px" height="80px" borderRadius="50%" /> {/* Profile image */}
+                    </div>
+                    <SkeletonCardContent>
+                        <SkeletonUI width="70%" height="20px" /> {/* Username */}
+                        <SkeletonUI width="100px" height="35px" borderRadius="20px" /> {/* Follow button */}
+                    </SkeletonCardContent>
+                </SkeletonCard>
+            ))}
+        </CardsContainer>
+    );
 
     const fetchFollowers = async (page: number = 1) => {
         try {
@@ -337,30 +410,62 @@ const FriendsPage: React.FC = () => {
         });
     }, [followers, following, followingIds, potentialFriends]);
 
+    if (showSkeleton) {
+        return (
+            <Layout>
+                <FriendsPageContainer>
+                    <Section>
+                        <SectionTitle>Followers</SectionTitle>
+                        <SectionContainer>
+                            {renderSkeletonCards(4)}
+                        </SectionContainer>
+                    </Section>
+                    
+                    <Section>
+                        <SectionTitle>Following</SectionTitle>
+                        <SectionContainer>
+                            {renderSkeletonCards(4)}
+                        </SectionContainer>
+                    </Section>
+
+                    <Section>
+                        <SectionTitle>People You May Know</SectionTitle>
+                        <SectionContainer>
+                            {renderSkeletonCards(4)}
+                        </SectionContainer>
+                    </Section>
+                </FriendsPageContainer>
+            </Layout>
+        );
+    }
+
     return (
         <Layout>
             <FriendsPageContainer>
                 <Section>
                     <SectionTitle>Followers</SectionTitle>
                     <SectionContainer>
-                        <CardsContainer>
-                            {followers.map((person) => (
-                                <PeopleCard
-                                    key={person.userId}
-                                    userId={person.userId}
-                                    username={person.username}
-                                    profileImg={person.profileImg}
-                                    isFollowing={followingIds.has(person.userId)}
-                                    onFollowToggle={handleFollowToggle}
-                                />
-                            ))}
-                        </CardsContainer>
+                        {followers.length > 0 ? (
+                            <CardsContainer>
+                                {followers.map((follower) => (
+                                    <PeopleCard
+                                        key={follower.userId}
+                                        userId={follower.userId}
+                                        username={follower.username}
+                                        profileImg={follower.profileImg}
+                                        isFollowing={followingIds.has(follower.userId)}
+                                        onFollowToggle={handleFollowToggle}
+                                    />
+                                ))}
+                            </CardsContainer>
+                        ) : (
+                            <EmptyStateContainer>
+                                <EmptyStateText>No Followers Yet</EmptyStateText>
+                            </EmptyStateContainer>
+                        )}
                         {followersPagination.page < followersPagination.totalPages && (
-                            <MoreButton
-                                onClick={() => handleMoreClick('followers')}
-                                disabled={followersPagination.loading}
-                            >
-                                {followersPagination.loading ? 'Loading...' : 'Show More'}
+                            <MoreButton onClick={() => handleMoreClick('followers')}>
+                                Load More
                             </MoreButton>
                         )}
                     </SectionContainer>
@@ -369,24 +474,27 @@ const FriendsPage: React.FC = () => {
                 <Section>
                     <SectionTitle>Following</SectionTitle>
                     <SectionContainer>
-                        <CardsContainer>
-                            {following.map((person) => (
-                                <PeopleCard
-                                    key={person.userId}
-                                    userId={person.userId}
-                                    username={person.username}
-                                    profileImg={person.profileImg}
-                                    isFollowing={true}
-                                    onFollowToggle={handleFollowToggle}
-                                />
-                            ))}
-                        </CardsContainer>
+                        {following.length > 0 ? (
+                            <CardsContainer>
+                                {following.map((followedUser) => (
+                                    <PeopleCard
+                                        key={followedUser.userId}
+                                        userId={followedUser.userId}
+                                        username={followedUser.username}
+                                        profileImg={followedUser.profileImg}
+                                        isFollowing={true}
+                                        onFollowToggle={handleFollowToggle}
+                                    />
+                                ))}
+                            </CardsContainer>
+                        ) : (
+                            <EmptyStateContainer>
+                                <EmptyStateText>You're Not Following Anyone Yet</EmptyStateText>
+                            </EmptyStateContainer>
+                        )}
                         {followingPagination.page < followingPagination.totalPages && (
-                            <MoreButton
-                                onClick={() => handleMoreClick('following')}
-                                disabled={followingPagination.loading}
-                            >
-                                {followingPagination.loading ? 'Loading...' : 'Show More'}
+                            <MoreButton onClick={() => handleMoreClick('following')}>
+                                Load More
                             </MoreButton>
                         )}
                     </SectionContainer>
@@ -395,24 +503,27 @@ const FriendsPage: React.FC = () => {
                 <Section>
                     <SectionTitle>People You May Know</SectionTitle>
                     <SectionContainer>
-                        <CardsContainer>
-                            {potentialFriends.map((user) => (
-                                <PeopleCard
-                                    key={user.userId}
-                                    userId={user.userId}
-                                    username={user.username}
-                                    profileImg={user.profileImg}
-                                    isFollowing={followingIds.has(user.userId)}
-                                    onFollowToggle={handleFollowToggle}
-                                />
-                            ))}
-                        </CardsContainer>
+                        {potentialFriends.length > 0 ? (
+                            <CardsContainer>
+                                {potentialFriends.map((user) => (
+                                    <PeopleCard
+                                        key={user.userId}
+                                        userId={user.userId}
+                                        username={user.username}
+                                        profileImg={user.profileImg}
+                                        isFollowing={followingIds.has(user.userId)}
+                                        onFollowToggle={handleFollowToggle}
+                                    />
+                                ))}
+                            </CardsContainer>
+                        ) : (
+                            <EmptyStateContainer>
+                                <EmptyStateText>No Suggested Users Available</EmptyStateText>
+                            </EmptyStateContainer>
+                        )}
                         {potentialFriendsPagination.page < potentialFriendsPagination.totalPages && (
-                            <MoreButton 
-                                onClick={loadMorePotentialFriends}
-                                disabled={potentialFriendsPagination.loading}
-                            >
-                                {potentialFriendsPagination.loading ? 'Loading...' : 'Load More'}
+                            <MoreButton onClick={loadMorePotentialFriends}>
+                                Load More
                             </MoreButton>
                         )}
                     </SectionContainer>

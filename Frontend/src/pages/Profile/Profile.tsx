@@ -43,6 +43,7 @@ import {
     GiHeavenGate
 } from 'react-icons/gi';
 import { useUser } from '../../context/UserContext';
+import toast from 'react-hot-toast';
 
 // Import rank frame images
 import Level1Frame from "../../assets/rankImg/Level=1.png";
@@ -251,16 +252,24 @@ const Profile: React.FC = () => {
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/background-image`, {
                 method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
             });
 
             if (!response.ok) {
-                throw new Error('Failed to remove background image');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to remove background image');
             }
 
+            // Clear the background image in the UI
             setBackgroundImage('');
+            // Refresh the user profile to ensure everything is in sync
+            await fetchUserProfile();
         } catch (error) {
             console.error('Error removing background image:', error);
-            alert('Failed to remove background image. Please try again.');
+            toast.error('Failed to remove background image. Please try again.');
         }
     };
 

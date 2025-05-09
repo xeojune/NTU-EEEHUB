@@ -188,10 +188,20 @@ export class NotificationsService {
     try {
       this.logger.debug(`Getting unread count for user ${userId}`);
       
-      const count = await this.notificationModel.countDocuments({
-        recipients: userId,
-        read: false
+      const notifications = await this.notificationModel.find({
+        recipients: userId
       });
+
+      // Count notifications where this user's read status is false
+      const count = notifications.reduce((acc, notification) => {
+        const recipientIndex = notification.recipients.findIndex(
+          r => r.toString() === userId
+        );
+        if (recipientIndex === -1 || !notification.read[recipientIndex]) {
+          return acc + 1;
+        }
+        return acc;
+      }, 0);
       
       this.logger.debug(`Unread count: ${count}`);
       return count;

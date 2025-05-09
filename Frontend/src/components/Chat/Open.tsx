@@ -15,6 +15,11 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
   const [newRoomName, setNewRoomName] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [joinedRooms, setJoinedRooms] = useState<Set<string>>(() => {
+    // Initialize joinedRooms from localStorage
+    const savedJoinedRooms = localStorage.getItem('joinedRooms');
+    return savedJoinedRooms ? new Set(JSON.parse(savedJoinedRooms)) : new Set();
+  });
   const currentUserId = localStorage.getItem('userId');
 
   useEffect(() => {
@@ -28,7 +33,20 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
       })
       .then((data) => {
         console.log('Fetched rooms:', data);
-        setRooms(Array.isArray(data) ? data : []);
+        const roomsData = Array.isArray(data) ? data : [];
+        setRooms(roomsData);
+        
+        // Initialize joined rooms from both localStorage and current room data
+        if (currentUserId) {
+          const serverJoinedRooms = new Set(
+            roomsData
+              .filter(room => room.participants?.includes(currentUserId))
+              .map(room => room._id)
+          );
+          
+          // Merge with existing joinedRooms from localStorage
+          setJoinedRooms(prev => new Set([...prev, ...serverJoinedRooms]));
+        }
       })
       .catch(err => {
         console.error('Error fetching rooms:', err);
@@ -86,6 +104,11 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
     };
   }, [socket]);
 
+  // Save joinedRooms to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('joinedRooms', JSON.stringify([...joinedRooms]));
+  }, [joinedRooms]);
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -134,17 +157,54 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
   const handleJoinRoom = async (room: Room) => {
     if (!socket || !currentUserId) return;
 
-    socket.emit('joinOpenRoom', { roomId: room._id, userId: currentUserId }, (response: Room) => {
-      console.log('Join room response:', response);
-      if (response) {
-        setRooms(prev => prev.map(r => 
-          r._id === response._id ? response : r
-        ));
-        onRoomSelect(response);
-        // Store joined room in localStorage
-        localStorage.setItem('lastJoinedRoom', room._id);
-      }
-    });
+    try {
+      socket.emit('joinOpenRoom', { roomId: room._id, userId: currentUserId }, (response: Room) => {
+        console.log('Join room response:', response);
+        if (response) {
+          // Update rooms state
+          setRooms(prev => prev.map(r => 
+            r._id === response._id ? response : r
+          ));
+          
+          // Update joined rooms state
+          setJoinedRooms(prev => new Set([...prev, room._id]));
+          
+          onRoomSelect(response);
+          localStorage.setItem('lastJoinedRoom', room._id);
+        }
+      });
+    } catch (error) {
+      console.error('Error joining room:', error);
+    }
+  };
+
+  const handleLeaveRoom = async (room: Room) => {
+    if (!socket || !currentUserId) return;
+
+    try {
+      socket.emit('leaveOpenRoom', { roomId: room._id, userId: currentUserId }, (response: Room) => {
+        if (response) {
+          // Update rooms state
+          setRooms(prev => prev.map(r => 
+            r._id === response._id ? response : r
+          ));
+          
+          // Remove room from joinedRooms
+          setJoinedRooms(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(room._id);
+            return newSet;
+          });
+          
+          // If this was the last joined room, remove it from localStorage
+          if (localStorage.getItem('lastJoinedRoom') === room._id) {
+            localStorage.removeItem('lastJoinedRoom');
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error leaving room:', error);
+    }
   };
 
   return (
@@ -162,19 +222,27 @@ const Open: React.FC<OpenProps> = ({ onRoomSelect, selectedRoomId }) => {
             <RoomItem
               key={room._id}
               isSelected={selectedRoomId === room._id}
-              onClick={() => currentUserId && room.participants?.includes(currentUserId) && onRoomSelect(room)}
+              onClick={() => currentUserId && joinedRooms.has(room._id) && onRoomSelect(room)}
             >
               <RoomInfo>
                 <div>{room.roomName}</div>
                 <small>{room.participants?.length || 0} participants</small>
               </RoomInfo>
-              {currentUserId && (!room.participants?.includes(currentUserId)) && (
+              {currentUserId && !joinedRooms.has(room._id) && (
                 <JoinButton onClick={(e) => {
                   e.stopPropagation();
                   handleJoinRoom(room);
                 }}>
                   Join
                 </JoinButton>
+              )}
+              {currentUserId && joinedRooms.has(room._id) && (
+                <LeaveButton onClick={(e) => {
+                  e.stopPropagation();
+                  handleLeaveRoom(room);
+                }}>
+                  Leave
+                </LeaveButton>
               )}
             </RoomItem>
           ))
@@ -324,6 +392,25 @@ const JoinButton = styled.button`
 
   &:hover:not(:disabled) {
     background-color: #45a049;
+  }
+`;
+
+const LeaveButton = styled.button`
+  padding: 5px 15px;
+  border-radius: 5px;
+  border: none;
+  background-color: #e74c3c;
+  color: white;
+  cursor: pointer;
+  margin-left: 10px;
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: #c0392b;
   }
 `;
 

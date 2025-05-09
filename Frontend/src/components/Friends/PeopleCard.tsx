@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { AddFriendButton, Card, ContentContainer, CoverImage, Name, ProfileImage } from '../../styles/Friends/PeopleCardStyle';
+import { AddFriendButton, Card as OriginalCard, ContentContainer, CoverImage, Name, ProfileImage } from '../../styles/Friends/PeopleCardStyle';
 import { useUser } from '../../context/UserContext';
 import defaultAvatar from '../../assets/userImg/defaultAvatar.png';
 import defaultBackground from '../../assets/userImg/defaultBackground.png';
+import styled, { keyframes } from 'styled-components';
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const AnimatedCard = styled(OriginalCard)`
+  animation: ${fadeIn} 0.5s ease-out forwards;
+`;
 
 interface PeopleCardProps {
   userId: string;
@@ -11,6 +27,7 @@ interface PeopleCardProps {
   backgroundImg?: string;
   isFollowing: boolean;
   onFollowToggle: (userId: string) => void;
+  delay?: number;
 }
 
 const PeopleCard: React.FC<PeopleCardProps> = ({
@@ -20,10 +37,15 @@ const PeopleCard: React.FC<PeopleCardProps> = ({
   backgroundImg,
   isFollowing,
   onFollowToggle,
+  delay = 0
 }) => {
   const [avatarUrl, setAvatarUrl] = useState<string>(profileImg || defaultAvatar);
   const [backgroundUrl, setBackgroundUrl] = useState<string>(backgroundImg || defaultBackground);
   const { getUserAvatar, getUserBackground } = useUser();
+
+  const StyledAnimatedCard = styled(AnimatedCard)`
+    animation-delay: ${delay}ms;
+  `;
 
   useEffect(() => {
     const loadImages = async () => {
@@ -45,7 +67,7 @@ const PeopleCard: React.FC<PeopleCardProps> = ({
   }, [username, getUserAvatar, getUserBackground]);
 
   return (
-    <Card>
+    <StyledAnimatedCard>
       <CoverImage url={backgroundUrl}>
         <ProfileImage url={avatarUrl} />
       </CoverImage>
@@ -61,7 +83,7 @@ const PeopleCard: React.FC<PeopleCardProps> = ({
           {!isFollowing && <span>+</span>}{isFollowing ? 'Following' : 'Follow'}
         </AddFriendButton>
       </ContentContainer>
-    </Card>
+    </StyledAnimatedCard>
   );
 };
 

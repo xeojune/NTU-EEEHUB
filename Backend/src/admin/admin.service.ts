@@ -100,9 +100,60 @@ export class AdminService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    // Also delete all posts by this user
-    await this.postModel.deleteMany({ userId: userId });
-    return { message: 'User and associated posts deleted successfully' };
+    return user;
+  }
+
+  async updateUser(userId: string, userData: Partial<User>) {
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { $set: userData },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // If points were updated, update the ranking
+    if (userData.totalPoints !== undefined) {
+      await this.userModel.findByIdAndUpdate(userId, {
+        ranking: this.determineRanking(userData.totalPoints)
+      });
+    }
+
+    return user;
+  }
+
+  private determineRanking(points: number): string {
+    if (points >= 5000001) return 'Absolute God';
+    if (points >= 4000000) return 'Guardian God';
+    if (points >= 3000000) return 'Space God';
+    if (points >= 2000000) return 'Sun God';
+    if (points >= 1000000) return 'Moon God';
+    if (points >= 600001) return 'Fire God';
+    if (points >= 400000) return 'Wind God';
+    if (points >= 200000) return 'Plant God';
+    if (points >= 100001) return 'Superhuman';
+    if (points >= 90000) return 'Supreme';
+    if (points >= 75000) return 'Hero';
+    if (points >= 50000) return 'Advanced';
+    if (points >= 10000) return 'Intermediate';
+    if (points >= 5000) return 'Novice';
+    if (points >= 1501) return 'Civilian';
+    return 'Beginner';
+  }
+
+  async updatePost(postId: string, postData: Partial<Post>) {
+    const post = await this.postModel.findByIdAndUpdate(
+      postId,
+      { $set: postData },
+      { new: true }
+    ).populate('userId', 'username email');
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+    return post;
   }
 
   async deletePost(postId: string) {

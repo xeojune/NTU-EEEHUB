@@ -277,4 +277,4 @@ export const GroupListPage: React.FC = () => {
       </PageContainer>
     </Layout>
   );
-};
+}
